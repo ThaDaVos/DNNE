@@ -17,7 +17,9 @@
 
   <PropertyGroup>
     <PackageId>DNNE</PackageId>
-    <Version>2.0.1</Version>
+    <Build>$([System.DateTime]::op_Subtraction($([System.DateTime]::get_Now().get_Date()),$([System.DateTime]::new(2000,1,1))).get_TotalDays())</Build>
+    <Revision>$([MSBuild]::Divide($([System.DateTime]::get_Now().get_TimeOfDay().get_TotalSeconds()),2).ToString('F0'))</Revision>
+    <Version>2.0.1-patched-$(Build).$(Revision)</Version>
     <Authors>AaronRobinsonMSFT</Authors>
     <Owners>AaronRobinsonMSFT</Owners>
     <Description>Package used to generated native exports for .NET assemblies.</Description>
