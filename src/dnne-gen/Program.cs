@@ -19,11 +19,14 @@
 
 using System;
 using System.IO;
+using DNNE.Generators;
 
 namespace DNNE
 {
-    class Program
+    partial class Program
     {
+        public const string SafeMacroRegEx = "[^a-zA-Z0-9_]";
+
         static void Main(string[] args)
         {
             try
@@ -36,16 +39,34 @@ namespace DNNE
 
                 var parsed = Parse(args);
 
-                using (var g = new Generator(parsed.AssemblyPath, parsed.XmlDocFile))
+                using (var reader = new AssemblyReader(parsed.AssemblyPath, parsed.XmlDocFile))
                 {
-                    if (string.IsNullOrWhiteSpace(parsed.OutputPath))
+                    var info = reader.Read();
+
+                    Console.WriteLine($"Generating exports using classes?: " + (parsed.UseClasses ? "Yes" : "No"));
+
+                    var generators = parsed.UseClasses
+                        ? new IGenerator[] {
+                            new C99ClassedGenerator(info),
+                            new ClarionCodeGenerator(info),
+                            new ClarionIncludeGenerator(info),
+                            new ClarionLibGenerator(info),
+                        }
+                        : new IGenerator[] {
+                            new C99Generator(info),
+                        };
+
+                    foreach (var generator in generators)
                     {
-                        g.Emit(Console.Out);
-                    }
-                    else
-                    {
-                        g.Emit(parsed.OutputPath);
-                        Console.WriteLine($"Generated exports written to '{parsed.OutputPath}'.");
+                        // if (string.IsNullOrWhiteSpace(parsed.OutputPath))
+                        // {
+                        //     generator.Emit(Console);
+                        // }
+                        // else
+                        // {
+                            generator.Emit(parsed.OutputPath);
+                            Console.WriteLine($"Generated exports written to '{parsed.OutputPath}'.");
+                        // }
                     }
                 }
             }
@@ -59,30 +80,15 @@ namespace DNNE
             }
         }
 
-        class ParsedArguments
-        {
-            public string AssemblyPath { get; set; }
-            public string OutputPath { get; set; }
-            public string XmlDocFile { get; set; }
-        }
-
-        class ParseException : Exception
-        {
-            public string Argument { get; private set; }
-
-            public ParseException(string arg, string message)
-                : base(message)
-            {
-                this.Argument = arg;
-            }
-        }
-
         static ParsedArguments Parse(string[] args)
         {
             var parsed = new ParsedArguments()
             {
                 OutputPath = string.Empty
             };
+
+            Console.WriteLine("Passed arguments: " + string.Join('|', args));
+
             for (int i = 0; i < args.Length; ++i)
             {
                 var arg = args[i];
@@ -112,35 +118,40 @@ namespace DNNE
                 var flag = arg.Substring(1).ToLowerInvariant();
                 switch (flag)
                 {
+                    case "c":
+                        {
+                            parsed.UseClasses = true;
+                            break;
+                        }
                     case "o":
-                    {
-                        if ((i + 1) == args.Length)
                         {
-                            throw new ParseException(flag, "Missing output file");
+                            if ((i + 1) == args.Length)
+                            {
+                                throw new ParseException(flag, "Missing output file");
+                            }
+                            arg = args[++i];
+                            parsed.OutputPath = arg;
+                            break;
                         }
-                        arg = args[++i];
-                        parsed.OutputPath = arg;
-                        break;
-                    }
                     case "d":
-                    {
-                        if ((i + 1) == args.Length)
                         {
-                            throw new ParseException(flag, "Missing documentation file");
+                            if ((i + 1) == args.Length)
+                            {
+                                throw new ParseException(flag, "Missing documentation file");
+                            }
+                            arg = args[++i];
+                            if (!File.Exists(arg))
+                            {
+                                throw new ParseException(arg, "Documentation file not found.");
+                            }
+                            parsed.XmlDocFile = arg;
+                            break;
                         }
-                        arg = args[++i];
-                        if (!File.Exists(arg))
-                        {
-                            throw new ParseException(arg, "Documentation file not found.");
-                        }
-                        parsed.XmlDocFile = arg;
-                        break;
-                    }
                     case "?":
                     case "help":
-                    {
-                        throw new ParseException(flag,
-@"Syntax: dnne-gen [-o <filepath> | -?]+ <path_to_assembly>
+                        {
+                            throw new ParseException(flag,
+    @"Syntax: dnne-gen [-o <filepath> | -?]+ <path_to_assembly>
     -o <filepath>   : The output file for the generated source.
                         The last value is used. If file exists,
                         it will be overwritten.
@@ -152,7 +163,7 @@ namespace DNNE
                         are added to the output header file.
     -?              : This message.
 ");
-                    }
+                        }
                     default:
                         throw new ParseException(flag, "Unknown flag");
                 }
