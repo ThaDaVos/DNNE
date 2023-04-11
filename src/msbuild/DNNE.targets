@@ -77,9 +77,10 @@ DNNE.targets
 
     <PropertyGroup>
       <DocFlag Condition="Exists($(DocumentationFile))">-d &quot;$(DocumentationFile)&quot;</DocFlag>
+      <ClassesFlag Condition="'$(DnneWrapWithClasses)' == 'true'">-c</ClassesFlag>
     </PropertyGroup>
 
-    <Exec Command="$(DnneGenExe) @(IntermediateAssembly) $(DocFlag) -o @(DnneGeneratedSourceFile)" />
+    <Exec Command="$(DnneGenExe) @(IntermediateAssembly) $(DocFlag) $(ClassesFlag) -o @(DnneGeneratedSourceFile)" />
   </Target>
 
   <PropertyGroup>
@@ -180,6 +181,23 @@ DNNE.targets
     <Copy
         Condition="$([MSBuild]::IsOsPlatform('Windows'))"
         SourceFiles="$(DnneGeneratedBinPath)/$(DnneNativeExportsBinaryName).lib"
+        DestinationFolder="$(DnneNativeExportsBinaryPath)" />
+    <!-- Exports for Clarion -->
+    <Copy
+        Condition="$([MSBuild]::IsOsPlatform('Windows')) AND Exists('$(DnneGeneratedOutputPath)\$(TargetName).g.clw')"
+        SourceFiles="$(DnneGeneratedOutputPath)\$(TargetName).g.clw"
+        DestinationFolder="$(DnneNativeExportsBinaryPath)" />
+    <Copy
+        Condition="$([MSBuild]::IsOsPlatform('Windows')) AND Exists('$(DnneGeneratedOutputPath)\$(TargetName).g.inc')"
+        SourceFiles="$(DnneGeneratedOutputPath)\$(TargetName).g.inc"
+        DestinationFolder="$(DnneNativeExportsBinaryPath)" />
+    <Copy
+        Condition="$([MSBuild]::IsOsPlatform('Windows')) AND Exists('$(DnneGeneratedOutputPath)\$(TargetName).g.lib')"
+        SourceFiles="$(DnneGeneratedOutputPath)\$(TargetName).g.lib"
+        DestinationFolder="$(DnneNativeExportsBinaryPath)" />
+    <Copy
+        Condition="$([MSBuild]::IsOsPlatform('Windows')) AND Exists('$(DnneGeneratedOutputPath)\$(TargetName).g.c')"
+        SourceFiles="$(DnneGeneratedOutputPath)\$(TargetName).g.c"
         DestinationFolder="$(DnneNativeExportsBinaryPath)" />
   </Target>
 

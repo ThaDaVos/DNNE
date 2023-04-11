@@ -91,5 +91,8 @@ DNNE.props
         file and deps.json file. The user must also copy the appropriate runtime binaries to create a
         valid self-contained install environment. -->
     <DnneSelfContained_Experimental>false</DnneSelfContained_Experimental>
+
+    <!-- Set's it up so the exported names will use the classname to prevent issues with duplicate names - implemented for Clarion -->
+    <DnneWrapWithClasses>false</DnneWrapWithClasses>
   </PropertyGroup>
 </Project>
