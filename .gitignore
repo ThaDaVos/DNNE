@@ -6,3 +6,9 @@
 **/launchSettings.json
 
 test/build/
+
+out/
+
+.vscode/launch.json
+.vscode/settings.json
+.vscode/tasks.json
