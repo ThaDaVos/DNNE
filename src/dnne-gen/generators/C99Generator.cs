@@ -31,7 +31,7 @@ namespace DNNE.Generators
 {
     internal class C99Generator : Generator
     {
-        public C99Generator(AssemblyInformation assemblyInformation) : base(assemblyInformation)
+        internal C99Generator(AssemblyInformation assemblyInformation) : base(assemblyInformation)
         {
         }
 

@@ -19,11 +19,12 @@
 
 using System.Collections.Immutable;
 using System.Reflection.Metadata;
+using System.Xml.Serialization;
 
 namespace DNNE.Assembly
 {
 
-    internal struct ExportedMethod
+    public struct ExportedMethod
     {
         public ExportType Type { get; init; }
         public string EnclosingTypeName { get; init; }
@@ -32,8 +33,12 @@ namespace DNNE.Assembly
         public SignatureCallingConvention CallingConvention { get; init; }
         public PlatformSupport Platforms { get; init; }
         public string ReturnType { get; init; }
+        public string RawReturnType { get; init; }
         public string XmlDoc { get; init; }
+        public ImmutableList<UsedAttribute> UsedAttributes { get; init; }
+        [XmlIgnore]
         public ImmutableArray<string> ArgumentTypes { get; init; }
+        [XmlIgnore]
         public ImmutableArray<string> ArgumentNames { get; init; }
     }
 }

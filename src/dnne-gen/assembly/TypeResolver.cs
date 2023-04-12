@@ -22,7 +22,7 @@ using System.Reflection.Metadata;
 
 namespace DNNE.Assembly
 {
-    internal class TypeResolver : ICustomAttributeTypeProvider<KnownType>
+    public class TypeResolver : ICustomAttributeTypeProvider<KnownType>
     {
         public KnownType GetPrimitiveType(PrimitiveTypeCode typeCode)
         {

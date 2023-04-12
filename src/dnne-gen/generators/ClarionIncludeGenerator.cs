@@ -8,7 +8,7 @@ namespace DNNE.Generators
 {
     internal class ClarionIncludeGenerator : ClarionGenerator
     {
-        public ClarionIncludeGenerator(AssemblyInformation assemblyInformation) : base(assemblyInformation)
+        internal ClarionIncludeGenerator(AssemblyInformation assemblyInformation) : base(assemblyInformation)
         {
         }
 

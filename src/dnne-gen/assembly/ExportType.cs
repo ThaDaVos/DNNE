@@ -19,7 +19,7 @@
 
 namespace DNNE.Assembly
 {
-    internal enum ExportType
+    public enum ExportType
     {
         None,
         Export,

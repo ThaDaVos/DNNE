@@ -19,7 +19,7 @@
 
 namespace DNNE.Assembly
 {
-    internal enum KnownType
+    public enum KnownType
     {
         Unknown,
         I4,

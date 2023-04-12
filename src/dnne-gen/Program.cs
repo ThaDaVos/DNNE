@@ -52,6 +52,7 @@ namespace DNNE
                     { "ClarionSource", new GeneratorMapping{ Factory = (info) => new ClarionCodeGenerator(info), NeedsClassSupport = true } },
                     { "ClarionInc", new GeneratorMapping{ Factory = (info) => new ClarionIncludeGenerator(info), NeedsClassSupport = true } },
                     { "ClarionLib", new GeneratorMapping{ Factory = (info) => new ClarionLibGenerator(info), NeedsClassSupport = true } },
+                    { "XMLDefinition", new GeneratorMapping{ Factory = (info) => new XMLDefinitionGenerator(info), NeedsClassSupport = false } },
                 };
 
                 var parsed = Parse(args);

@@ -28,7 +28,7 @@ namespace DNNE.Generators
     {
         protected AssemblyInformation assemblyInformation;
 
-        public Generator(AssemblyInformation assemblyInformation)
+        internal Generator(AssemblyInformation assemblyInformation)
         {
             this.assemblyInformation = assemblyInformation;
         }

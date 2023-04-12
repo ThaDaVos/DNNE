@@ -61,7 +61,8 @@ DNNE.targets
     <DnneNativeExportsOutputs Include="$(DnneNativeExportsBinaryPath)$(DnneNativeExportsBinaryName)$(DnneNativeBinaryExt);$(DnneNativeExportsBinaryPath)$(DnneNativeExportsBinaryName).h;$(DnneNativeExportsBinaryPath)dnne.h" />
 
     <!-- Add outputs and general glob to help with project cleanup -->
-    <Clean Include="@(DnneNativeExportsOutputs);$(DnneNativeExportsBinaryPath)$(DnneNativeExportsBinaryName).*"/>
+    <Clean
+      Include="@(DnneNativeExportsOutputs);$(DnneGeneratedOutputPath)/$(TargetName).g.*;$(DnneNativeExportsBinaryPath)$(DnneNativeExportsBinaryName).*" />
   </ItemGroup>
 
   <Target
@@ -137,6 +138,7 @@ DNNE.targets
 
     <ItemGroup>
       <__DnneAdditionalIncludeDirectories Include="$(DnneAdditionalIncludeDirectories)" />
+      <DnneGeneratedSourceFiles Include="$(DnneGeneratedOutputPath)/$(TargetName).g.*" />
     </ItemGroup>
 
     <CreateCompileCommand
@@ -183,23 +185,9 @@ DNNE.targets
         Condition="$([MSBuild]::IsOsPlatform('Windows'))"
         SourceFiles="$(DnneGeneratedBinPath)/$(DnneNativeExportsBinaryName).lib"
         DestinationFolder="$(DnneNativeExportsBinaryPath)" />
-    <!-- Exports for Clarion -->
     <Copy
-        Condition="$([MSBuild]::IsOsPlatform('Windows')) AND Exists('$(DnneGeneratedOutputPath)\$(TargetName).g.clw')"
-        SourceFiles="$(DnneGeneratedOutputPath)\$(TargetName).g.clw"
-        DestinationFolder="$(DnneNativeExportsBinaryPath)" />
-    <Copy
-        Condition="$([MSBuild]::IsOsPlatform('Windows')) AND Exists('$(DnneGeneratedOutputPath)\$(TargetName).g.inc')"
-        SourceFiles="$(DnneGeneratedOutputPath)\$(TargetName).g.inc"
-        DestinationFolder="$(DnneNativeExportsBinaryPath)" />
-    <Copy
-        Condition="$([MSBuild]::IsOsPlatform('Windows')) AND Exists('$(DnneGeneratedOutputPath)\$(TargetName).g.lib')"
-        SourceFiles="$(DnneGeneratedOutputPath)\$(TargetName).g.lib"
-        DestinationFolder="$(DnneNativeExportsBinaryPath)" />
-    <Copy
-        Condition="$([MSBuild]::IsOsPlatform('Windows')) AND Exists('$(DnneGeneratedOutputPath)\$(TargetName).g.c')"
-        SourceFiles="$(DnneGeneratedOutputPath)\$(TargetName).g.c"
-        DestinationFolder="$(DnneNativeExportsBinaryPath)" />
+      SourceFiles="@(DnneGeneratedSourceFiles)"
+      DestinationFolder="$(DnneNativeExportsBinaryPath)" />
   </Target>
 
   <!--

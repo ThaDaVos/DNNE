@@ -94,6 +94,7 @@ namespace DNNE.Assembly
 
                 var supported = new List<OSPlatform>();
                 var unsupported = new List<OSPlatform>();
+                var usedAttributes = new List<UsedAttribute>();
                 var callConv = SignatureCallingConvention.Unmanaged;
                 var exportAttrType = ExportType.None;
                 string managedMethodName = this.mdReader.GetString(methodDef.Name);
@@ -103,6 +104,18 @@ namespace DNNE.Assembly
                 {
                     CustomAttribute customAttr = this.mdReader.GetCustomAttribute(customAttrHandle);
                     var currAttrType = this.GetExportAttributeType(customAttr);
+
+                    var (namespaceMaybe, nameMaybe) = ParseCustomAttribute(mdReader, customAttr);
+
+                    if (nameMaybe != null && namespaceMaybe != null)
+                    {
+                        usedAttributes.Add(new UsedAttribute
+                        {
+                            Namespace = mdReader.GetString(namespaceMaybe.Value),
+                            Name = mdReader.GetString(nameMaybe.Value)
+                        });
+                    }
+
                     if (currAttrType == ExportType.None)
                     {
                         // Check if method has other supported attributes.
@@ -277,12 +290,14 @@ namespace DNNE.Assembly
                         Type = GetTypeOSPlatformScope(methodDef),
                         Method = new Scope()
                         {
-                            Support = supported,
-                            NoSupport = unsupported,
+                            Support = supported.ToImmutableList(),
+                            NoSupport = unsupported.ToImmutableList(),
                         }
                     },
                     ReturnType = returnType,
+                    RawReturnType = signature.ReturnType,
                     XmlDoc = xmlDoc,
+                    UsedAttributes = usedAttributes.ToImmutableList(),
                     ArgumentTypes = ImmutableArray.Create(argumentTypes),
                     ArgumentNames = ImmutableArray.Create(argumentNames),
                 });
@@ -306,11 +321,12 @@ namespace DNNE.Assembly
                         {
                             Name = g.Key.Split('.').Last(),
                             FullName = g.Key,
-                            ExportedMethods = g.AsEnumerable()
+                            ExportedMethods = g.ToImmutableList()
                         }
-                    ),
-                ExportedMethods = exportedMethods,
-                AdditionalStatements = additionalCodeStatements,
+                    )
+                    .ToImmutableList(),
+                ExportedMethods = exportedMethods.ToImmutableList(),
+                AdditionalStatements = additionalCodeStatements.ToImmutableList(),
             };
         }
 
@@ -337,6 +353,7 @@ namespace DNNE.Assembly
             foreach (var customAttrHandle in attrs)
             {
                 CustomAttribute customAttr = this.mdReader.GetCustomAttribute(customAttrHandle);
+
                 if (this.TryGetOSPlatformAttributeValue(customAttr, out bool isSupported, out OSPlatform scen))
                 {
                     if (isSupported)
@@ -352,8 +369,8 @@ namespace DNNE.Assembly
 
             return new Scope()
             {
-                Support = supported,
-                NoSupport = unsupported
+                Support = supported.ToImmutableList(),
+                NoSupport = unsupported.ToImmutableList()
             };
         }
 
@@ -479,34 +496,39 @@ namespace DNNE.Assembly
 
         internal static bool IsAttributeType(MetadataReader reader, CustomAttribute attribute, string targetNamespace, string targetName)
         {
-            StringHandle namespaceMaybe;
-            StringHandle nameMaybe;
+            var (namespaceMaybe, nameMaybe) = ParseCustomAttribute(reader, attribute);
+
+            if (namespaceMaybe == null || nameMaybe == null)
+            {
+                return false;
+            }
+
+#if DEBUG
+            string attrNamespace = reader.GetString(namespaceMaybe.Value);
+            string attrName = reader.GetString(nameMaybe.Value);
+#endif
+            return reader.StringComparer.Equals(namespaceMaybe.Value, targetNamespace)
+                && reader.StringComparer.Equals(nameMaybe.Value, targetName);
+        }
+
+        internal static (StringHandle? parsedNamespace, StringHandle? parsedName) ParseCustomAttribute(MetadataReader reader, CustomAttribute attribute)
+        {
             switch (attribute.Constructor.Kind)
             {
                 case HandleKind.MemberReference:
                     MemberReference refConstructor = reader.GetMemberReference((MemberReferenceHandle)attribute.Constructor);
                     TypeReference refType = reader.GetTypeReference((TypeReferenceHandle)refConstructor.Parent);
-                    namespaceMaybe = refType.Namespace;
-                    nameMaybe = refType.Name;
-                    break;
+                    return (refType.Namespace, refType.Name);
 
                 case HandleKind.MethodDefinition:
                     MethodDefinition defConstructor = reader.GetMethodDefinition((MethodDefinitionHandle)attribute.Constructor);
                     TypeDefinition defType = reader.GetTypeDefinition(defConstructor.GetDeclaringType());
-                    namespaceMaybe = defType.Namespace;
-                    nameMaybe = defType.Name;
-                    break;
+                    return (defType.Namespace, defType.Name);
 
                 default:
                     Debug.Assert(false, "Unknown attribute constructor kind");
-                    return false;
+                    return (null, null);
             }
-
-#if DEBUG
-            string attrNamespace = reader.GetString(namespaceMaybe);
-            string attrName = reader.GetString(nameMaybe);
-#endif
-            return reader.StringComparer.Equals(namespaceMaybe, targetNamespace) && reader.StringComparer.Equals(nameMaybe, targetName);
         }
 
         internal static (string preguard, string postguard) GetC99PlatformGuards(in PlatformSupport platformSupport)

@@ -11,7 +11,7 @@ namespace DNNE.Generators
 {
     internal partial class ClarionLibGenerator : ClarionGenerator
     {
-        public ClarionLibGenerator(AssemblyInformation assemblyInformation) : base(assemblyInformation)
+        internal ClarionLibGenerator(AssemblyInformation assemblyInformation) : base(assemblyInformation)
         {
         }
 

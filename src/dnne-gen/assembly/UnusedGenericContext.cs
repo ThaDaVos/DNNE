@@ -19,5 +19,5 @@
 
 namespace DNNE.Assembly
 {
-    internal class UnusedGenericContext { }
+    public class UnusedGenericContext { }
 }

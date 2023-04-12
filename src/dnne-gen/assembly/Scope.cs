@@ -17,14 +17,14 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Runtime.InteropServices;
 
 namespace DNNE.Assembly
 {
-    internal struct Scope
+    public struct Scope
     {
-        public IEnumerable<OSPlatform> Support { get; init; }
-        public IEnumerable<OSPlatform> NoSupport { get; init; }
+        public ImmutableList<OSPlatform> Support { get; init; }
+        public ImmutableList<OSPlatform> NoSupport { get; init; }
     }
 }

@@ -19,7 +19,7 @@
 
 namespace DNNE.Assembly
 {
-    internal struct PlatformSupport
+    public struct PlatformSupport
     {
         public Scope Assembly { get; init; }
         public Scope Module { get; init; }
