@@ -4,7 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using DNNE.Generators.Clarion;
+using DNNE.Assembly;
+using DNNE.Language.Clarion;
 
 namespace DNNE.Generators
 {
@@ -14,7 +15,7 @@ namespace DNNE.Generators
         {
         }
 
-        protected override string ParseOutPutFileName(string outputFile)
+        public override string ParseOutPutFileName(string outputFile)
         {
             return outputFile.Replace("g.c", "g.lib");
         }
@@ -77,8 +78,6 @@ namespace DNNE.Generators
                         - 3 /* Exclude first three bytes of Header */;
 
                     libHeader.len = (ushort)recordSize;
-
-                    Console.WriteLine($"Clarion Lib Stats [{recordSize}]| [ Header Size: {headerSize} | Module: {export.Module} [{moduleByteCount}] | Symbol: {export.Symbol} [{symbolByteCount}] ]");
 
                     WriteStruct(libFile, libHeader);
                     WritePString(libFile, export.Symbol);

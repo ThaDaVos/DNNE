@@ -18,7 +18,11 @@
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using DNNE.Assembly;
+using DNNE.Exceptions;
 using DNNE.Generators;
 
 namespace DNNE
@@ -26,6 +30,12 @@ namespace DNNE
     partial class Program
     {
         public const string SafeMacroRegEx = "[^a-zA-Z0-9_]";
+
+        struct GeneratorMapping
+        {
+            internal Func<AssemblyInformation, IGenerator> Factory { get; init; }
+            internal bool NeedsClassSupport { get; init; }
+        }
 
         static void Main(string[] args)
         {
@@ -37,36 +47,61 @@ namespace DNNE
                     args = new[] { "-?" };
                 }
 
+                var possibleGenerators = new Dictionary<string, GeneratorMapping>()
+                {
+                    { "ClarionSource", new GeneratorMapping{ Factory = (info) => new ClarionCodeGenerator(info), NeedsClassSupport = true } },
+                    { "ClarionInc", new GeneratorMapping{ Factory = (info) => new ClarionIncludeGenerator(info), NeedsClassSupport = true } },
+                    { "ClarionLib", new GeneratorMapping{ Factory = (info) => new ClarionLibGenerator(info), NeedsClassSupport = true } },
+                };
+
                 var parsed = Parse(args);
 
                 using (var reader = new AssemblyReader(parsed.AssemblyPath, parsed.XmlDocFile))
                 {
                     var info = reader.Read();
 
-                    Console.WriteLine($"Generating exports using classes?: " + (parsed.UseClasses ? "Yes" : "No"));
+                    var givenAdditionalGenerators = parsed.AdditionalGenerators?.Split(';') ?? Array.Empty<string>();
 
-                    var generators = parsed.UseClasses
-                        ? new IGenerator[] {
-                            new C99ClassedGenerator(info),
-                            new ClarionCodeGenerator(info),
-                            new ClarionIncludeGenerator(info),
-                            new ClarionLibGenerator(info),
+                    var neededGeneratorMappings = possibleGenerators
+                        .Where(
+                            (entry) => givenAdditionalGenerators.Contains(entry.Key)
+                                || givenAdditionalGenerators.Any((generator) => entry.Key.StartsWith(generator.TrimEnd('*')))
+                    ).Select((entry) => entry.Value);
+
+                    IGenerator c99Generator;
+                    if (parsed.UseClasses || neededGeneratorMappings.Any((mapping) => mapping.NeedsClassSupport))
+                    {
+                        c99Generator = new C99ClassedGenerator(info);
+                    }
+                    else
+                    {
+                        c99Generator = new C99Generator(info);
+                    }
+
+                    if (string.IsNullOrWhiteSpace(parsed.OutputPath))
+                    {
+                        using (var stream = new MemoryStream())
+                        {
+                            c99Generator.Emit(stream);
+                            Console.Out.Write(stream);
                         }
-                        : new IGenerator[] {
-                            new C99Generator(info),
-                        };
+
+                        return;
+                    }
+                    else
+                    {
+                        c99Generator.Emit(parsed.OutputPath);
+                        Console.WriteLine($"Generated export for 'C99' written to '{parsed.OutputPath}'.");
+                    }
+
+                    var generators = neededGeneratorMappings.Select((mapping) => mapping.Factory(info));
 
                     foreach (var generator in generators)
                     {
-                        // if (string.IsNullOrWhiteSpace(parsed.OutputPath))
-                        // {
-                        //     generator.Emit(Console);
-                        // }
-                        // else
-                        // {
-                            generator.Emit(parsed.OutputPath);
-                            Console.WriteLine($"Generated exports written to '{parsed.OutputPath}'.");
-                        // }
+                        generator.Emit(parsed.OutputPath);
+                        Console.WriteLine(
+                            $"Generated export for '{generator.GetType().Name.Replace("Generator", "")}' written to '{generator.ParseOutPutFileName(parsed.OutputPath)}'."
+                        );
                     }
                 }
             }
@@ -86,8 +121,6 @@ namespace DNNE
             {
                 OutputPath = string.Empty
             };
-
-            Console.WriteLine("Passed arguments: " + string.Join('|', args));
 
             for (int i = 0; i < args.Length; ++i)
             {
@@ -121,6 +154,17 @@ namespace DNNE
                     case "c":
                         {
                             parsed.UseClasses = true;
+                            break;
+                        }
+                    case "g":
+                        {
+                            if ((i + 1) == args.Length)
+                            {
+                                throw new ParseException(flag, "Missing list of additional generators");
+                            }
+
+                            arg = args[++i];
+                            parsed.AdditionalGenerators = arg;
                             break;
                         }
                     case "o":

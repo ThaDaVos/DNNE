@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace DNNE.Generators.Clarion
+namespace DNNE.Language.Clarion
 {
     [StructLayout(layoutKind: LayoutKind.Sequential, Pack = 1, Size = 7)]
     internal struct LibFileHeader

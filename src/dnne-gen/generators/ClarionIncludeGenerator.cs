@@ -1,6 +1,8 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Text;
+using DNNE.Assembly;
+using DNNE.Languages.Clarion;
 
 namespace DNNE.Generators
 {
@@ -10,7 +12,7 @@ namespace DNNE.Generators
         {
         }
 
-        protected override string ParseOutPutFileName(string outputFile)
+        public override string ParseOutPutFileName(string outputFile)
         {
             return outputFile.Replace("g.c", "g.inc");
         }

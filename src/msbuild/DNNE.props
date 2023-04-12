@@ -94,5 +94,16 @@ DNNE.props
 
     <!-- Set's it up so the exported names will use the classname to prevent issues with duplicate names - implemented for Clarion -->
     <DnneWrapWithClasses>false</DnneWrapWithClasses>
+
+    <!-- Specify additional generators to be run, available generators:
+        - Clarion Include File - ClarionInc
+        - Clarion Source Code File (class wrapper) - ClarionSource
+        - Clarion LIB file (OMF format) - ClarionLib
+        Multiple generators can be defined with ';' as delimiter, for example (No quotes): "ClarionInc;ClarionSource;ClarionLib"
+        Or if you want all from a single subset, you can use a * too - for example "Clarion*" to get all Clarion Generators.
+
+        Certain generators automatically imply that `DnneWrapWithClasses` is true
+    -->
+    <DnneAdditionalGenerators></DnneAdditionalGenerators>
   </PropertyGroup>
 </Project>

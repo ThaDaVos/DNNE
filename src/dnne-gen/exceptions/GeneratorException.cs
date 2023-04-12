@@ -1,6 +1,6 @@
 using System;
 
-namespace DNNE
+namespace DNNE.Exceptions
 {
     internal class GeneratorException : Exception
     {

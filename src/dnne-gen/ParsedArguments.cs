@@ -25,5 +25,6 @@ namespace DNNE
         public string OutputPath { get; set; }
         public string XmlDocFile { get; set; }
         public bool UseClasses { get; set; }
+        public string AdditionalGenerators { get; set; }
     }
 }

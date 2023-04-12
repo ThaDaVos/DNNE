@@ -17,23 +17,13 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using System.Collections.Immutable;
-using System.Reflection.Metadata;
+using System;
 
-namespace DNNE
+namespace DNNE.Exceptions
 {
-
-    internal struct ExportedMethod
+    internal class NotSupportedTypeException : Exception
     {
-        public ExportType Type { get; init; }
-        public string EnclosingTypeName { get; init; }
-        public string MethodName { get; init; }
-        public string ExportName { get; init; }
-        public SignatureCallingConvention CallingConvention { get; init; }
-        public PlatformSupport Platforms { get; init; }
-        public string ReturnType { get; init; }
-        public string XmlDoc { get; init; }
-        public ImmutableArray<string> ArgumentTypes { get; init; }
-        public ImmutableArray<string> ArgumentNames { get; init; }
+        public string Type { get; private set; }
+        public NotSupportedTypeException(string type) { this.Type = type; }
     }
 }

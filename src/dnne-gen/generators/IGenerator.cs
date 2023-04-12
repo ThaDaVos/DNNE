@@ -25,5 +25,6 @@ namespace DNNE.Generators
     {
         void Emit(string outputFile);
         void Emit(Stream outputStream);
+        string ParseOutPutFileName(string outputFile);
     }
 }

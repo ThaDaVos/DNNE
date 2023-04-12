@@ -1,4 +1,4 @@
-namespace DNNE.Generators.Clarion
+namespace DNNE.Language.Clarion
 {
     internal struct ExportQ
     {

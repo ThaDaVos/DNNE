@@ -25,8 +25,10 @@ using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using DNNE.Assembly;
+using DNNE.Exceptions;
 
-namespace DNNE
+namespace DNNE.Languages.C99
 {
     internal class C99TypeProvider : ISignatureTypeProvider<string, UnusedGenericContext>
     {
@@ -252,9 +254,10 @@ namespace DNNE
                 (string pre_nosupport, string post_nosupport) = ConvertCollection(scope.NoSupport, "!(", ")");
 
                 var post = new StringBuilder();
-                if (!string.IsNullOrEmpty(pre_support)
-                    || !string.IsNullOrEmpty(pre_nosupport))
-                {
+                if (
+                    !string.IsNullOrEmpty(pre_support) ||
+                    !string.IsNullOrEmpty(pre_nosupport)
+                ) {
                     // Add the preamble for the guard
                     pre.Append("#if ");
                     post.Append("#endif // ");

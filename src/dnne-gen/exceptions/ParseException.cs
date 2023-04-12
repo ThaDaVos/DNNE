@@ -19,7 +19,7 @@
 
 using System;
 
-namespace DNNE
+namespace DNNE.Exceptions
 {
     class ParseException : Exception
     {

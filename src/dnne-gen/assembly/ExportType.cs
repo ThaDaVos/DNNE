@@ -17,15 +17,12 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using System.Collections.Generic;
-
-namespace DNNE
+namespace DNNE.Assembly
 {
-
-    internal struct ExportedType
+    internal enum ExportType
     {
-        public string Name { get; init; }
-        public string FullName { get; init; }
-        public IEnumerable<ExportedMethod> ExportedMethods { get; init; }
+        None,
+        Export,
+        UnmanagedCallersOnly,
     }
 }

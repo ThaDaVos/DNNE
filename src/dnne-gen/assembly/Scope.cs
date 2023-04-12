@@ -20,7 +20,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace DNNE
+namespace DNNE.Assembly
 {
     internal struct Scope
     {

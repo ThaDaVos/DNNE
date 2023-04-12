@@ -78,9 +78,10 @@ DNNE.targets
     <PropertyGroup>
       <DocFlag Condition="Exists($(DocumentationFile))">-d &quot;$(DocumentationFile)&quot;</DocFlag>
       <ClassesFlag Condition="'$(DnneWrapWithClasses)' == 'true'">-c</ClassesFlag>
+      <AdditionalGeneratorsFlag Condition="'$(DnneAdditionalGenerators)' != ''">-g &quot;$(DnneAdditionalGenerators)&quot;</AdditionalGeneratorsFlag>
     </PropertyGroup>
 
-    <Exec Command="$(DnneGenExe) @(IntermediateAssembly) $(DocFlag) $(ClassesFlag) -o @(DnneGeneratedSourceFile)" />
+    <Exec Command="$(DnneGenExe) @(IntermediateAssembly) $(DocFlag) $(ClassesFlag) $(AdditionalGeneratorsFlag) -o @(DnneGeneratedSourceFile)" />
   </Target>
 
   <PropertyGroup>

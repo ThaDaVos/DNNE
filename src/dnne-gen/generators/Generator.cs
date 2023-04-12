@@ -19,6 +19,8 @@
 
 using System.IO;
 using System.Linq;
+using DNNE.Assembly;
+using DNNE.Exceptions;
 
 namespace DNNE.Generators
 {
@@ -44,7 +46,7 @@ namespace DNNE.Generators
             Emit(File.OpenWrite(outputFile));
         }
 
-        protected virtual string ParseOutPutFileName(string outputFile)
+        public virtual string ParseOutPutFileName(string outputFile)
         {
             return outputFile;
         }

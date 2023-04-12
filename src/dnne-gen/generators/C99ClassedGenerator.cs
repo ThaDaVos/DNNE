@@ -23,6 +23,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using DNNE.Assembly;
+using DNNE.Languages.C99;
 
 namespace DNNE.Generators
 {

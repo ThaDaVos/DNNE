@@ -20,7 +20,7 @@
 using System;
 using System.Reflection.Metadata;
 
-namespace DNNE
+namespace DNNE.Assembly
 {
     internal class TypeResolver : ICustomAttributeTypeProvider<KnownType>
     {

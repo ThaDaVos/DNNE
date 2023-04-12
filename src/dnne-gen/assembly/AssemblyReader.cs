@@ -12,8 +12,10 @@ using System.Runtime.Versioning;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
+using DNNE.Exceptions;
+using DNNE.Languages.C99;
 
-namespace DNNE
+namespace DNNE.Assembly
 {
     internal class AssemblyReader : IDisposable
     {

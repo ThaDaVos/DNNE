@@ -1,3 +1,5 @@
+using DNNE.Assembly;
+
 namespace DNNE.Generators
 {
     abstract class ClarionGenerator : Generator

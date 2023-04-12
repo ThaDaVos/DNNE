@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace DNNE
+namespace DNNE.Assembly
 {
     internal struct AssemblyInformation
     {
