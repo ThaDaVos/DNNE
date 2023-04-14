@@ -12,6 +12,7 @@ using System.Runtime.Versioning;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
+using DNNE.Assembly.Attributors;
 using DNNE.Exceptions;
 using DNNE.Languages.C99;
 
@@ -80,6 +81,16 @@ namespace DNNE.Assembly
 
         public AssemblyInformation Read()
         {
+            List<IAttributor> attributors = new()
+            {
+                new C99DeclCodeAttributor(),
+                new C99TypeAttributor(),
+                new ClarionDeclCodeAttributor(),
+                new ClarionIncCodeAttributor(),
+                new ClarionTypeAttributor(),
+                new ClarionReturnTypeAttributor(),
+            };
+
             var additionalCodeStatements = new List<string>();
             var exportedMethods = new List<ExportedMethod>();
             foreach (var methodDefHandle in this.mdReader.MethodDefinitions)
@@ -94,7 +105,7 @@ namespace DNNE.Assembly
 
                 var supported = new List<OSPlatform>();
                 var unsupported = new List<OSPlatform>();
-                var usedAttributes = new List<UsedAttribute>();
+                var methodAttributes = new List<UsedAttribute>();
                 var callConv = SignatureCallingConvention.Unmanaged;
                 var exportAttrType = ExportType.None;
                 string managedMethodName = this.mdReader.GetString(methodDef.Name);
@@ -105,16 +116,11 @@ namespace DNNE.Assembly
                     CustomAttribute customAttr = this.mdReader.GetCustomAttribute(customAttrHandle);
                     var currAttrType = this.GetExportAttributeType(customAttr);
 
-                    var (namespaceMaybe, nameMaybe) = ParseCustomAttribute(mdReader, customAttr);
-
-                    if (nameMaybe != null && namespaceMaybe != null)
-                    {
-                        usedAttributes.Add(new UsedAttribute
-                        {
-                            Namespace = mdReader.GetString(namespaceMaybe.Value),
-                            Name = mdReader.GetString(nameMaybe.Value)
-                        });
-                    }
+                    methodAttributes.AddRange(
+                        attributors
+                            .Where(attributor => attributor.IsApplicable(mdReader, customAttr))
+                            .Select(attributor => attributor.Parse(mdReader, this.typeResolver, customAttr, "Method"))
+                    );
 
                     if (currAttrType == ExportType.None)
                     {
@@ -232,6 +238,7 @@ namespace DNNE.Assembly
                 var returnType = signature.ReturnType;
                 var argumentTypes = signature.ParameterTypes.ToArray();
                 var argumentNames = new string[signature.ParameterTypes.Length];
+                var arguments = new List<ExportedMethodArgument>();
 
                 // Process each parameter.
                 foreach (ParameterHandle paramHandle in methodDef.GetParameters())
@@ -251,9 +258,28 @@ namespace DNNE.Assembly
                     }
 
                     // Check custom attributes for additional code.
+                    var argumentAttributes = new List<UsedAttribute>();
                     foreach (var attr in param.GetCustomAttributes())
                     {
                         CustomAttribute custAttr = this.mdReader.GetCustomAttribute(attr);
+
+                        if (argIndex == ReturnIndex)
+                        {
+                            methodAttributes.AddRange(
+                                attributors
+                                    .Where(attributor => attributor.IsApplicable(mdReader, custAttr, true))
+                                    .Select(attributor => attributor.Parse(mdReader, this.typeResolver, custAttr, "Return"))
+                            );
+                        }
+                        else
+                        {
+                            argumentAttributes.AddRange(
+                                attributors
+                                    .Where(attributor => attributor.IsApplicable(mdReader, custAttr))
+                                    .Select(attributor => attributor.Parse(mdReader, this.typeResolver, custAttr, "Argument"))
+                            );
+                        }
+
                         if (C99TypeProvider.TryGetC99TypeAttributeValue(this.mdReader, this.typeResolver, custAttr, out string c99Type))
                         {
                             // Overridden type defined.
@@ -272,6 +298,15 @@ namespace DNNE.Assembly
                             additionalCodeStatements.Add(c99Decl);
                         }
                     }
+
+                    arguments.Add(new()
+                    {
+                        Index = argIndex,
+                        Name = argIndex != ReturnIndex ? argumentNames[argIndex] : "Return",
+                        Type = argIndex != ReturnIndex ? argumentTypes[argIndex] : returnType,
+                        Attributes = argumentAttributes.ToImmutableList(),
+                        HasDefault = !param.GetDefaultValue().IsNil
+                    });
                 }
 
                 var xmlDoc = FindXmlDoc(enclosingTypeName.Replace('+', '.') + Type.Delimiter + managedMethodName, argumentTypes);
@@ -297,7 +332,8 @@ namespace DNNE.Assembly
                     ReturnType = returnType,
                     RawReturnType = signature.ReturnType,
                     XmlDoc = xmlDoc,
-                    UsedAttributes = usedAttributes.ToImmutableList(),
+                    UsedAttributes = methodAttributes.ToImmutableList(),
+                    Arguments = arguments.ToImmutableList(),
                     ArgumentTypes = ImmutableArray.Create(argumentTypes),
                     ArgumentNames = ImmutableArray.Create(argumentNames),
                 });
@@ -328,6 +364,13 @@ namespace DNNE.Assembly
                 ExportedMethods = exportedMethods.ToImmutableList(),
                 AdditionalStatements = additionalCodeStatements.ToImmutableList(),
             };
+        }
+
+        internal bool IsDnneCustomAttribute(MetadataReader reader, CustomAttribute attribute)
+        {
+            var (namespaceMaybe, _) = ParseCustomAttribute(reader, attribute);
+
+            return namespaceMaybe.HasValue && reader.StringComparer.Equals(namespaceMaybe.Value, "DNNE");
         }
 
         internal Scope GetTypeOSPlatformScope(MethodDefinition methodDef)

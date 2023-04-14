@@ -59,12 +59,13 @@ namespace DNNE.Generators
                 var export = exportQ[i];
                 if (export.TreeLevel == 2)
                 {
-                    var libHeader = new LibFileHeader();
-
-                    libHeader.typ = 0x88;
-                    libHeader.kind = 0x0A000;
-                    libHeader.bla = 1;
-                    libHeader.ordFlag = 1;
+                    var libHeader = new LibFileHeader
+                    {
+                        typ = 0x88,
+                        kind = 0x0A000,
+                        bla = 1,
+                        ordFlag = 1
+                    };
 
                     int moduleByteCount = Encoding.UTF8.GetByteCount(export.Module);
                     int symbolByteCount = Encoding.UTF8.GetByteCount(export.Symbol);

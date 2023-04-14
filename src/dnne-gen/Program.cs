@@ -63,9 +63,13 @@ namespace DNNE
 
                     var givenAdditionalGenerators = parsed.AdditionalGenerators?.Split(';') ?? Array.Empty<string>();
 
+                    var includeAllGenerators = givenAdditionalGenerators.Contains("*");
+
                     var neededGeneratorMappings = possibleGenerators
                         .Where(
-                            (entry) => givenAdditionalGenerators.Contains(entry.Key)
+                            (entry) =>
+                                includeAllGenerators == true
+                                || givenAdditionalGenerators.Contains(entry.Key)
                                 || givenAdditionalGenerators.Any((generator) => entry.Key.StartsWith(generator.TrimEnd('*')))
                     ).Select((entry) => entry.Value);
 

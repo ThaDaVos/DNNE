@@ -41,12 +41,15 @@ namespace DNNE.Generators
                     var arguments = "";
                     var argumentNames = "";
 
-                    for (int i = 0; i < export.ArgumentTypes.Length; i++)
+                    foreach (var argument in export.Arguments)
                     {
-                        var type = ClarionTypeProvider.MapTypeToClarion(export.ArgumentTypes[i]);
-                        var name = export.ArgumentNames[i];
+                        string type = argument.Type;
 
-                        if (i == 0 && export.ArgumentTypes[i] == "intptr_t")
+                        if (argument.Attributes.Any(attr => attr.TargetLanguage == "Clarion" && attr.Group == "Type" && attr.Target == "Method")) {
+                            type = argument.Attributes.Where(attr => attr.TargetLanguage == "Clarion" && attr.Group == "Type" && attr.Target == "Method").First().Value;
+                        }
+
+                        if (argument.Index == 0 && type == "intptr_t")
                         {
                             argumentNames += $"SELF.instance";
                             argumentDefinition += $"LONG";
@@ -54,8 +57,8 @@ namespace DNNE.Generators
                         else
                         {
                             argumentDefinition += $",{type}";
-                            arguments += $",{type} {name}";
-                            argumentNames += $", {name}";
+                            arguments += $",{type} {argument.Name}";
+                            argumentNames += $", {argument.Name}";
                         }
                     }
 
@@ -64,6 +67,11 @@ namespace DNNE.Generators
                     argumentNames = argumentNames.Trim(',', ' ');
 
                     var returnType = ClarionTypeProvider.MapTypeToClarion(export.ReturnType);
+
+                    if (export.UsedAttributes.Any(attr => attr.TargetLanguage == "Clarion" && attr.Group == "Type" && attr.Target == "Return"))
+                    {
+                        returnType = export.UsedAttributes.Where(attr => attr.TargetLanguage == "Clarion" && attr.Group == "Type" && attr.Target == "Return").First().Value;
+                    }
 
                     moduleBuilder.AppendLine($@"        {safeTypeName}_{export.MethodName}({argumentDefinition}),{returnType},c,raw,dll(1),name('{className}_{export.MethodName}')");
 
