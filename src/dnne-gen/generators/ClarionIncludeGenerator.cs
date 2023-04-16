@@ -20,6 +20,8 @@ namespace DNNE.Generators
         protected override void Write(Stream outputStream)
         {
             using var writer = new StreamWriter(outputStream);
+            var extraCode = new StringBuilder();
+
             foreach (var enclosingType in this.assemblyInformation.ExportedTypes)
             {
                 string className = ResolveClassName(enclosingType);
@@ -31,19 +33,19 @@ instance LONG"
 
                 var wrapperBuilder = new StringBuilder();
 
-                foreach (var export in enclosingType.ExportedMethods.OrderBy(ex => ex.MethodName))
+                foreach (ExportedMethod export in enclosingType.ExportedMethods.OrderBy(ex => ex.MethodName))
                 {
                     var safeTypeName = export.EnclosingTypeName.Replace("_", "").Replace(".", "_");
 
                     var arguments = "";
 
-                    foreach (var argument in export.Arguments)
+                    foreach (var argument in export.Arguments.Where(arg => arg.Index >= 0))
                     {
                         string type = argument.Type;
 
-                        if (argument.Attributes.Any(attr => attr.Group == "Type" && attr.Target == "Method"))
+                        if (argument.Attributes.Any(attr => attr.TargetLanguage == "Clarion" && attr.Group == "Type" && attr.Target == "Argument"))
                         {
-                            type = argument.Attributes.Where(attr => attr.Group == "Type" && attr.Target == "Method").First().Value;
+                            type = argument.Attributes.Where(attr => attr.TargetLanguage == "Clarion" && attr.Group == "Type" && attr.Target == "Argument").First().Value;
                         }
 
                         if (argument.Index == 0 && type == "intptr_t") {
@@ -51,15 +53,25 @@ instance LONG"
                         }
 
                         arguments += $",{type}";
+
+                        foreach (var attribute in argument.Attributes.Where(attr => attr.TargetLanguage == "Clarion" && attr.Group == "IncCode" && attr.Target == "Argument"))
+                        {
+                            extraCode.AppendLine(attribute.Value);
+                        }
                     }
 
                     arguments = arguments.Trim(',', ' ');
 
                     var returnType = ClarionTypeProvider.MapTypeToClarion(export.ReturnType);
 
-                    if (export.UsedAttributes.Any(attr => attr.Group == "Type" && attr.Target == "Return"))
+                    if (export.Attributes.Any(attr => attr.TargetLanguage == "Clarion" && attr.Group == "Type" && attr.Target == "Return"))
                     {
-                        returnType = export.UsedAttributes.Where(attr => attr.Group == "Type" && attr.Target == "Return").First().Value;
+                        returnType = export.Attributes.Where(attr => attr.TargetLanguage == "Clarion" && attr.Group == "Type" && attr.Target == "Return").First().Value;
+                    }
+
+                    foreach (var attribute in export.Attributes.Where(attr => attr.TargetLanguage == "Clarion" && attr.Group == "IncCode" && attr.Target == "Method"))
+                    {
+                        extraCode.AppendLine(attribute.Value);
                     }
 
                     switch (export.MethodName.ToUpper())
@@ -86,6 +98,8 @@ instance LONG"
                 }
                 writer.Write(wrapperBuilder);
                 writer.WriteLine(@"                           END");
+                writer.WriteLine();
+                writer.Write(extraCode.ToString().Trim());
             }
         }
     }

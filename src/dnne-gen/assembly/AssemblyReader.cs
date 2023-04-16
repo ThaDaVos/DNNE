@@ -265,10 +265,15 @@ namespace DNNE.Assembly
 
                         if (argIndex == ReturnIndex)
                         {
-                            methodAttributes.AddRange(
-                                attributors
+                            var attrs = attributors
                                     .Where(attributor => attributor.IsApplicable(mdReader, custAttr, true))
-                                    .Select(attributor => attributor.Parse(mdReader, this.typeResolver, custAttr, "Return"))
+                                    .Select(attributor => attributor.Parse(mdReader, this.typeResolver, custAttr, "Return"));
+
+                            methodAttributes.AddRange(
+                                attrs
+                            );
+                            argumentAttributes.AddRange(
+                                attrs
                             );
                         }
                         else
@@ -332,7 +337,7 @@ namespace DNNE.Assembly
                     ReturnType = returnType,
                     RawReturnType = signature.ReturnType,
                     XmlDoc = xmlDoc,
-                    UsedAttributes = methodAttributes.ToImmutableList(),
+                    Attributes = methodAttributes.ToImmutableList(),
                     Arguments = arguments.ToImmutableList(),
                     ArgumentTypes = ImmutableArray.Create(argumentTypes),
                     ArgumentNames = ImmutableArray.Create(argumentNames),

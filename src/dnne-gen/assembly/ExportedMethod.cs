@@ -35,7 +35,7 @@ namespace DNNE.Assembly
         public string ReturnType { get; init; }
         public string RawReturnType { get; init; }
         public string XmlDoc { get; init; }
-        public ImmutableList<UsedAttribute> UsedAttributes { get; init; }
+        public ImmutableList<UsedAttribute> Attributes { get; init; }
         public ImmutableList<ExportedMethodArgument> Arguments { get; init; }
         [XmlIgnore]
         public ImmutableArray<string> ArgumentTypes { get; init; }

@@ -41,12 +41,12 @@ namespace DNNE.Generators
                     var arguments = "";
                     var argumentNames = "";
 
-                    foreach (var argument in export.Arguments)
+                    foreach (var argument in export.Arguments.Where(arg => arg.Index >= 0))
                     {
                         string type = argument.Type;
 
-                        if (argument.Attributes.Any(attr => attr.TargetLanguage == "Clarion" && attr.Group == "Type" && attr.Target == "Method")) {
-                            type = argument.Attributes.Where(attr => attr.TargetLanguage == "Clarion" && attr.Group == "Type" && attr.Target == "Method").First().Value;
+                        if (argument.Attributes.Any(attr => attr.TargetLanguage == "Clarion" && attr.Group == "Type" && attr.Target == "Argument")) {
+                            type = argument.Attributes.Where(attr => attr.TargetLanguage == "Clarion" && attr.Group == "Type" && attr.Target == "Argument").First().Value;
                         }
 
                         if (argument.Index == 0 && type == "intptr_t")
@@ -68,9 +68,9 @@ namespace DNNE.Generators
 
                     var returnType = ClarionTypeProvider.MapTypeToClarion(export.ReturnType);
 
-                    if (export.UsedAttributes.Any(attr => attr.TargetLanguage == "Clarion" && attr.Group == "Type" && attr.Target == "Return"))
+                    if (export.Attributes.Any(attr => attr.TargetLanguage == "Clarion" && attr.Group == "Type" && attr.Target == "Return"))
                     {
-                        returnType = export.UsedAttributes.Where(attr => attr.TargetLanguage == "Clarion" && attr.Group == "Type" && attr.Target == "Return").First().Value;
+                        returnType = export.Attributes.Where(attr => attr.TargetLanguage == "Clarion" && attr.Group == "Type" && attr.Target == "Return").First().Value;
                     }
 
                     moduleBuilder.AppendLine($@"        {safeTypeName}_{export.MethodName}({argumentDefinition}),{returnType},c,raw,dll(1),name('{className}_{export.MethodName}')");
