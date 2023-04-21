@@ -53,15 +53,18 @@ namespace DNNE
                     { "ClarionInc", new GeneratorMapping{ Factory = (info) => new ClarionIncludeGenerator(info), NeedsClassSupport = true } },
                     { "ClarionLib", new GeneratorMapping{ Factory = (info) => new ClarionLibGenerator(info), NeedsClassSupport = true } },
                     { "XMLDefinition", new GeneratorMapping{ Factory = (info) => new XMLDefinitionGenerator(info), NeedsClassSupport = false } },
+                    { "XSDTypeContracts", new GeneratorMapping{ Factory = (info) => new XMLTypeContractsGenerator(info), NeedsClassSupport = false } },
                 };
 
                 var parsed = Parse(args);
+
+                Console.WriteLine($"Processing assembly from `{parsed.AssemblyPath}`");
 
                 using (var reader = new AssemblyReader(parsed.AssemblyPath, parsed.XmlDocFile))
                 {
                     var info = reader.Read();
 
-                    var givenAdditionalGenerators = parsed.AdditionalGenerators?.Split(';') ?? Array.Empty<string>();
+                    var givenAdditionalGenerators = parsed.AdditionalGenerators?.Split(';', '|', ',') ?? Array.Empty<string>();
 
                     var includeAllGenerators = givenAdditionalGenerators.Contains("*");
 
@@ -103,10 +106,19 @@ namespace DNNE
 
                     foreach (var generator in generators)
                     {
-                        generator.Emit(parsed.OutputPath);
-                        Console.WriteLine(
+                        try
+                        {
+                            generator.Emit(parsed.OutputPath);
+                            Console.WriteLine(
                             $"Generated export for '{generator.GetType().Name.Replace("Generator", "")}' written to '{generator.ParseOutPutFileName(parsed.OutputPath)}'."
-                        );
+                            );
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(
+                            $"Failed to generated export for '{generator.GetType().Name.Replace("Generator", "")}' error: {e}"
+                            );
+                        }
                     }
                 }
             }
@@ -148,7 +160,7 @@ namespace DNNE
                         throw new ParseException(arg, "Assembly not found.");
                     }
 
-                    parsed.AssemblyPath = arg;
+                    parsed.AssemblyPath = Path.GetFullPath(arg);
                     continue;
                 }
 

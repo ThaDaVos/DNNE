@@ -89,6 +89,7 @@ namespace DNNE.Assembly
                 new ClarionIncCodeAttributor(),
                 new ClarionTypeAttributor(),
                 new ClarionReturnTypeAttributor(),
+                new XMLTypeContractAttributor()
             };
 
             var additionalCodeStatements = new List<string>();
@@ -349,7 +350,9 @@ namespace DNNE.Assembly
                 throw new GeneratorException(this.assemblyPath, "Nothing to export.");
             }
 
-            string assemblyName = this.mdReader.GetString(this.mdReader.GetAssemblyDefinition().Name);
+            var assemblyDefinition = this.mdReader.GetAssemblyDefinition();
+
+            string assemblyName = this.mdReader.GetString(assemblyDefinition.Name);
 
             return new AssemblyInformation
             {

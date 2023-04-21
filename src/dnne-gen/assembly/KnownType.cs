@@ -30,6 +30,9 @@ namespace DNNE.Assembly
         CallConvFastcall,
         String,
         SystemTypeArray,
-        SystemType
+        SystemType,
+        Type,
+        Class,
+        ValueType
     }
 }

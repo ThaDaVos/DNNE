@@ -19,6 +19,8 @@
 
 using System;
 using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
+using Microsoft.Win32;
 
 namespace DNNE.Assembly
 {
@@ -41,22 +43,56 @@ namespace DNNE.Assembly
 
         public KnownType GetSZArrayType(KnownType elementType)
         {
-            if (elementType == KnownType.SystemType)
+            return elementType switch
             {
-                return KnownType.SystemTypeArray;
-            }
-
-            throw new BadImageFormatException("Unexpectedly got an array of unsupported type.");
+                KnownType.SystemType => KnownType.SystemTypeArray,
+                _ => throw new BadImageFormatException("Unexpectedly got an array of unsupported type.")
+            };
         }
 
         public KnownType GetTypeFromDefinition(MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind)
         {
-            return KnownType.Unknown;
+            SignatureTypeKind signatureTypeKind = reader.ResolveSignatureTypeKind(handle, rawTypeKind);
+            var definition = reader.GetTypeDefinition(handle);
+
+            if (definition.Name.IsNil == false) {
+                return DecodeTypeReferenceName(reader.GetString(definition.Name), signatureTypeKind);
+            }
+
+            return DecodeSignatureTypeKind(signatureTypeKind);
         }
 
         public KnownType GetTypeFromReference(MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind)
         {
-            return KnownType.Unknown;
+            SignatureTypeKind signatureTypeKind = reader.ResolveSignatureTypeKind(handle, rawTypeKind);
+            var reference = reader.GetTypeReference(handle);
+
+            if (reference.Name.IsNil == false)
+            {
+                return DecodeTypeReferenceName(reader.GetString(reference.Name), signatureTypeKind);
+            }
+
+            return DecodeSignatureTypeKind(signatureTypeKind);
+        }
+
+        private KnownType DecodeTypeReferenceName(string typeName, SignatureTypeKind kind)
+        {
+            return typeName switch
+            {
+                "Type" => KnownType.Type,
+                _ => DecodeSignatureTypeKind(kind)
+            };
+        }
+
+        private KnownType DecodeSignatureTypeKind(SignatureTypeKind kind)
+        {
+            return kind switch
+            {
+                SignatureTypeKind.Class => KnownType.Class,
+                SignatureTypeKind.ValueType => KnownType.ValueType,
+                SignatureTypeKind.Unknown => KnownType.Unknown,
+                _ => throw new NotImplementedException(),
+            };
         }
 
         public KnownType GetTypeFromSerializedName(string name)
@@ -84,12 +120,14 @@ namespace DNNE.Assembly
 
         public PrimitiveTypeCode GetUnderlyingEnumType(KnownType type)
         {
-            if (type == KnownType.CallingConvention)
+            return type switch
             {
-                return PrimitiveTypeCode.Int32;
-            }
-
-            throw new BadImageFormatException("Unexpectedly got an enum parameter for an attribute.");
+                KnownType.CallingConvention => PrimitiveTypeCode.Int32,
+                KnownType.I4 => PrimitiveTypeCode.Int32,
+                KnownType.String => PrimitiveTypeCode.String,
+                KnownType.Type => PrimitiveTypeCode.String,
+                _ => throw new BadImageFormatException("Unexpectedly got an enum parameter for an attribute.")
+            };
         }
 
         public bool IsSystemType(KnownType type)
