@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.Loader;
 using System.Runtime.Serialization;
+using System.Xml;
 using System.Xml.Schema;
-using System.Xml.Serialization;
 using DNNE.Assembly;
 
 namespace DNNE.Generators
@@ -42,31 +40,39 @@ namespace DNNE.Generators
                         {
                             if (exportedTypes.Contains(attribute.Value)) continue;
 
-                            var contractedType = assembly.GetType(attribute.Value);
+                            var contractedType = assembly.GetType(attribute.Value)
+                                ?? assembly.ExportedTypes.Where(t => t.Name == attribute.Value || t.FullName == attribute.Value).First();
 
                             if (contractedType == null)
                             {
-                                Console.WriteLine("Cannot find type: " + attribute.Value);
+                                Console.WriteLine($"Cannot find type: `{attribute.Value}`");
                                 continue;
                             }
 
                             if (exporter.CanExport(contractedType))
                             {
+                                Console.WriteLine($"Export schema for `{contractedType.FullName}`");
                                 exporter.Export(contractedType);
 
-                                exportedTypes.Add(attribute.Value);
+                                XmlSchemaSet mySchemas = exporter.Schemas;
 
-                                foreach (XmlSchema schema in exporter.Schemas.Schemas(contractedType.Namespace))
+                                XmlQualifiedName XmlNameValue = exporter.GetRootElementName(contractedType);
+
+                                foreach (XmlSchema schema in exporter.Schemas.Schemas(XmlNameValue.Namespace))
                                 {
                                     schema.Write(outputStream);
                                 }
+
+                                exportedTypes.Add(attribute.Value);
+                            } else {
+                                Console.WriteLine($"Cannot export schema for `{contractedType.Name}`");
                             }
                         }
                     }
                 }
             }
 
-            context.Unload();
+            // context.Unload();
         }
     }
 }

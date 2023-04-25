@@ -18,15 +18,19 @@
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using System.Collections.Immutable;
+using System.Runtime.Serialization;
 using System.Xml.Serialization;
 
 namespace DNNE.Assembly
 {
-
+    [DataContract]
     public struct ExportedType
     {
+        [DataMember]
         public string Name { get; init; }
+        [DataMember]
         public string FullName { get; init; }
+        [DataMember]
         public ImmutableList<ExportedMethod> ExportedMethods { get; init; }
     }
 }

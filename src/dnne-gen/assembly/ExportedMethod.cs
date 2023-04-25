@@ -19,27 +19,38 @@
 
 using System.Collections.Immutable;
 using System.Reflection.Metadata;
+using System.Runtime.Serialization;
 using System.Xml.Serialization;
 
 namespace DNNE.Assembly
 {
-
+    [DataContract]
     public struct ExportedMethod
     {
+        [DataMember]
         public ExportType Type { get; init; }
         public string EnclosingTypeName { get; init; }
+        [DataMember]
         public string MethodName { get; init; }
+        [DataMember]
         public string ExportName { get; init; }
+        [DataMember]
         public SignatureCallingConvention CallingConvention { get; init; }
+        [DataMember]
         public PlatformSupport Platforms { get; init; }
+        [DataMember]
         public string ReturnType { get; init; }
+        [DataMember]
         public string RawReturnType { get; init; }
+        [DataMember]
         public string XmlDoc { get; init; }
+        [DataMember]
         public ImmutableList<UsedAttribute> Attributes { get; init; }
+        [DataMember]
         public ImmutableList<ExportedMethodArgument> Arguments { get; init; }
-        [XmlIgnore]
+        [DataMember]
         public ImmutableArray<string> ArgumentTypes { get; init; }
-        [XmlIgnore]
+        [DataMember]
         public ImmutableArray<string> ArgumentNames { get; init; }
     }
 }

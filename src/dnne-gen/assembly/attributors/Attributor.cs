@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection.Metadata;
 using DNNE.Languages.C99;
@@ -33,8 +34,36 @@ namespace DNNE.Assembly.Attributors
                 Name = reader.GetString(nameMaybe.Value),
                 TargetLanguage = this.GetLanguage(),
                 Target = target,
-                Value = C99TypeProvider.GetFirstFixedArgAsStringValue(resolver, attribute)
-            };
+                Value = C99TypeProvider.GetFirstFixedArgAsStringValue(resolver, attribute),
+                Values = GetAttributeArgs(resolver, attribute)
+        };
+        }
+
+        private Dictionary<string, AttributeArgument> GetAttributeArgs(ICustomAttributeTypeProvider<KnownType> typeResolver, CustomAttribute attribute)
+        {
+            var arguments = new Dictionary<string, AttributeArgument>();
+
+            CustomAttributeValue<KnownType> data = attribute.DecodeValue(typeResolver);
+
+            int count = 1;
+            foreach (CustomAttributeTypedArgument<KnownType> item in data.FixedArguments)
+            {
+                arguments.Add($"arg{count++}", new AttributeArgument() {
+                    Type = item.Type,
+                    Value = item.Value,
+                });
+            }
+
+            foreach (CustomAttributeNamedArgument<KnownType> item in data.NamedArguments)
+            {
+                arguments.Add(item.Name, new AttributeArgument()
+                {
+                    Type = item.Type,
+                    Value = item.Value,
+                });
+            }
+
+            return arguments;
         }
 
         internal static (StringHandle? parsedNamespace, StringHandle? parsedName) ParseCustomAttribute(MetadataReader reader, CustomAttribute attribute)

@@ -1,5 +1,6 @@
 using System.IO;
-using System.Xml.Serialization;
+using System.Runtime.Serialization;
+using System.Xml;
 using DNNE.Assembly;
 
 namespace DNNE.Generators
@@ -17,9 +18,15 @@ namespace DNNE.Generators
 
         protected override void Write(Stream outputStream)
         {
-            var serializer = new XmlSerializer(typeof(AssemblyInformation));
-            using var writer = new StreamWriter(outputStream);
-            serializer.Serialize(writer, this.assemblyInformation);
+            var settings = new XmlWriterSettings
+            {
+                Indent = true,
+            };
+
+            var serializer = new DataContractSerializer(typeof(AssemblyInformation));
+            using var writer = XmlWriter.Create(outputStream, settings);
+            serializer.WriteObject(writer, this.assemblyInformation);
+            writer.Flush();
         }
     }
 }
