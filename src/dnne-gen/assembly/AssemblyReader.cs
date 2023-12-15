@@ -83,62 +83,67 @@ namespace DNNE.Assembly
         {
             List<IAttributor> attributors = new()
             {
+                // C99
                 new C99DeclCodeAttributor(),
                 new C99TypeAttributor(),
+                // Clarion
                 new ClarionDeclCodeAttributor(),
                 new ClarionIncCodeAttributor(),
                 new ClarionTypeAttributor(),
                 new ClarionReturnTypeAttributor(),
-                new XMLTypeContractAttributor()
+                // XML
+                new XMLTypeContractAttributor(),
+                // Utility
+                new MatrixMethodOfStringsAttributor(),
             };
 
-            var additionalCodeStatements = new List<string>();
-            var exportedMethods = new List<ExportedMethod>();
-            foreach (var methodDefHandle in this.mdReader.MethodDefinitions)
+            List<string> additionalCodeStatements = new List<string>();
+            List<ExportedMethod> exportedMethods = new List<ExportedMethod>();
+            foreach (MethodDefinitionHandle methodDefHandle in this.mdReader.MethodDefinitions)
             {
-                MethodDefinition methodDef = this.mdReader.GetMethodDefinition(methodDefHandle);
+                MethodDefinition methodDef = this.mdReader.GetMethodDefinition(handle: methodDefHandle);
 
                 // Only check public static functions
-                if (!methodDef.Attributes.HasFlag(MethodAttributes.Public | MethodAttributes.Static))
+                if (!methodDef.Attributes.HasFlag(flag: MethodAttributes.Public | MethodAttributes.Static))
                 {
                     continue;
                 }
 
-                var supported = new List<OSPlatform>();
-                var unsupported = new List<OSPlatform>();
-                var methodAttributes = new List<UsedAttribute>();
-                var callConv = SignatureCallingConvention.Unmanaged;
-                var exportAttrType = ExportType.None;
-                string managedMethodName = this.mdReader.GetString(methodDef.Name);
+                List<OSPlatform> supported = new List<OSPlatform>();
+                List<OSPlatform> unsupported = new List<OSPlatform>();
+                List<UsedAttribute> methodAttributes = new List<UsedAttribute>();
+                SignatureCallingConvention callConv = SignatureCallingConvention.Unmanaged;
+                ExportType exportAttrType = ExportType.None;
+                string managedMethodName = this.mdReader.GetString(handle: methodDef.Name);
                 string exportName = managedMethodName;
                 // Check for target attribute
-                foreach (var customAttrHandle in methodDef.GetCustomAttributes())
+                foreach (CustomAttributeHandle customAttrHandle in methodDef.GetCustomAttributes())
                 {
-                    CustomAttribute customAttr = this.mdReader.GetCustomAttribute(customAttrHandle);
-                    var currAttrType = this.GetExportAttributeType(customAttr);
+                    CustomAttribute customAttr = this.mdReader.GetCustomAttribute(handle: customAttrHandle);
+                    ExportType currAttrType = this.GetExportAttributeType(attribute: customAttr);
 
                     methodAttributes.AddRange(
-                        attributors
-                            .Where(attributor => attributor.IsApplicable(mdReader, customAttr))
-                            .Select(attributor => attributor.Parse(mdReader, this.typeResolver, customAttr, "Method"))
+                        collection: attributors
+                            .Where(predicate: (IAttributor attributor) => attributor.IsApplicable(reader: mdReader, attribute: customAttr))
+                            .Select(selector: (IAttributor attributor) => attributor.Parse(reader: mdReader, resolver: this.typeResolver, attribute: customAttr, target: "Method"))
                     );
 
                     if (currAttrType == ExportType.None)
                     {
                         // Check if method has other supported attributes.
-                        if (C99TypeProvider.TryGetC99DeclCodeAttributeValue(this.mdReader, this.typeResolver, customAttr, out string c99Decl))
+                        if (C99TypeProvider.TryGetC99DeclCodeAttributeValue(reader: this.mdReader, typeResolver: this.typeResolver, attribute: customAttr, c99Decl: out string c99Decl))
                         {
-                            additionalCodeStatements.Add(c99Decl);
+                            additionalCodeStatements.Add(item: c99Decl);
                         }
-                        else if (this.TryGetOSPlatformAttributeValue(customAttr, out bool isSupported, out OSPlatform scen))
+                        else if (this.TryGetOSPlatformAttributeValue(attribute: customAttr, support: out bool isSupported, platform: out OSPlatform scen))
                         {
                             if (isSupported)
                             {
-                                supported.Add(scen);
+                                supported.Add(item: scen);
                             }
                             else
                             {
-                                unsupported.Add(scen);
+                                unsupported.Add(item: scen);
                             }
                         }
 
@@ -148,17 +153,17 @@ namespace DNNE.Assembly
                     exportAttrType = currAttrType;
                     if (exportAttrType == ExportType.Export)
                     {
-                        CustomAttributeValue<KnownType> data = customAttr.DecodeValue(this.typeResolver);
+                        CustomAttributeValue<KnownType> data = customAttr.DecodeValue(provider: this.typeResolver);
                         if (data.NamedArguments.Length == 1)
                         {
-                            exportName = (string)data.NamedArguments[0].Value;
+                            exportName = (string)data.NamedArguments[index: 0].Value;
                         }
                     }
                     else
                     {
-                        Debug.Assert(exportAttrType == ExportType.UnmanagedCallersOnly);
-                        CustomAttributeValue<KnownType> data = customAttr.DecodeValue(this.typeResolver);
-                        foreach (var arg in data.NamedArguments)
+                        Debug.Assert(condition: exportAttrType == ExportType.UnmanagedCallersOnly);
+                        CustomAttributeValue<KnownType> data = customAttr.DecodeValue(provider: this.typeResolver);
+                        foreach (CustomAttributeNamedArgument<KnownType> arg in data.NamedArguments)
                         {
                             switch (arg.Type)
                             {
@@ -171,16 +176,16 @@ namespace DNNE.Assembly
                                         CallingConvention.StdCall => SignatureCallingConvention.StdCall,
                                         CallingConvention.ThisCall => SignatureCallingConvention.ThisCall,
                                         CallingConvention.FastCall => SignatureCallingConvention.FastCall,
-                                        _ => throw new NotSupportedException($"Unknown CallingConvention: {arg.Value}")
+                                        _ => throw new NotSupportedException(message: $"Unknown CallingConvention: {arg.Value}")
                                     };
                                     break;
 
                                 case KnownType.SystemTypeArray:
                                     if (arg.Value != null)
                                     {
-                                        foreach (var cct in (ImmutableArray<CustomAttributeTypedArgument<KnownType>>)arg.Value)
+                                        foreach (CustomAttributeTypedArgument<KnownType> cct in (ImmutableArray<CustomAttributeTypedArgument<KnownType>>)arg.Value)
                                         {
-                                            Debug.Assert(cct.Type == KnownType.SystemType);
+                                            Debug.Assert(condition: cct.Type == KnownType.SystemType);
                                             switch ((KnownType)cct.Value)
                                             {
                                                 case KnownType.CallConvCdecl:
@@ -205,7 +210,7 @@ namespace DNNE.Assembly
                                     break;
 
                                 default:
-                                    throw new GeneratorException(this.assemblyPath, $"Method '{managedMethodName}' has unknown Attribute value type.");
+                                    throw new GeneratorException(assemblyPath: this.assemblyPath, message: $"Method '{managedMethodName}' has unknown Attribute value type.");
                             }
                         }
                     }
@@ -218,75 +223,75 @@ namespace DNNE.Assembly
                 }
 
                 // Extract method details
-                var typeDef = this.mdReader.GetTypeDefinition(methodDef.GetDeclaringType());
-                var enclosingTypeName = this.ComputeEnclosingTypeName(typeDef);
+                TypeDefinition typeDef = this.mdReader.GetTypeDefinition(handle: methodDef.GetDeclaringType());
+                string enclosingTypeName = this.ComputeEnclosingTypeName(typeDef: typeDef);
 
                 // Process method signature.
                 MethodSignature<string> signature;
                 try
                 {
-                    var typeProvider = new C99TypeProvider();
+                    C99TypeProvider typeProvider = new();
 
-                    signature = methodDef.DecodeSignature(typeProvider, null);
+                    signature = methodDef.DecodeSignature(provider: typeProvider, genericContext: null);
 
                     typeProvider.ThrowIfUnsupportedLastPrimitiveType();
                 }
                 catch (NotSupportedTypeException nste)
                 {
-                    throw new GeneratorException(this.assemblyPath, $"Method '{managedMethodName}' has non-exportable type '{nste.Type}'");
+                    throw new GeneratorException(assemblyPath: this.assemblyPath, message: $"Method '{managedMethodName}' has non-exportable type '{nste.Type}'");
                 }
 
-                var returnType = signature.ReturnType;
-                var argumentTypes = signature.ParameterTypes.ToArray();
-                var argumentNames = new string[signature.ParameterTypes.Length];
-                var arguments = new List<ExportedMethodArgument>();
+                string returnType = signature.ReturnType;
+                string[] argumentTypes = signature.ParameterTypes.ToArray();
+                string[] argumentNames = new string[signature.ParameterTypes.Length];
+                List<ExportedMethodArgument> arguments = new List<ExportedMethodArgument>();
 
                 // Process each parameter.
                 foreach (ParameterHandle paramHandle in methodDef.GetParameters())
                 {
-                    Parameter param = this.mdReader.GetParameter(paramHandle);
+                    Parameter param = this.mdReader.GetParameter(handle: paramHandle);
 
                     // Sequence number starts from 1 for arguments.
                     // Number of 0 indicates return value.
                     // Update arg index to be from [0..n-1]
                     // Return index is -1.
                     const int ReturnIndex = -1;
-                    var argIndex = param.SequenceNumber - 1;
+                    int argIndex = param.SequenceNumber - 1;
                     if (argIndex != ReturnIndex)
                     {
-                        Debug.Assert(argIndex >= 0);
-                        argumentNames[argIndex] = this.mdReader.GetString(param.Name);
+                        Debug.Assert(condition: argIndex >= 0);
+                        argumentNames[argIndex] = this.mdReader.GetString(handle: param.Name);
                     }
 
                     // Check custom attributes for additional code.
-                    var argumentAttributes = new List<UsedAttribute>();
-                    foreach (var attr in param.GetCustomAttributes())
+                    List<UsedAttribute> argumentAttributes = new List<UsedAttribute>();
+                    foreach (CustomAttributeHandle attr in param.GetCustomAttributes())
                     {
-                        CustomAttribute custAttr = this.mdReader.GetCustomAttribute(attr);
+                        CustomAttribute custAttr = this.mdReader.GetCustomAttribute(handle: attr);
 
                         if (argIndex == ReturnIndex)
                         {
-                            var attrs = attributors
-                                    .Where(attributor => attributor.IsApplicable(mdReader, custAttr, true))
-                                    .Select(attributor => attributor.Parse(mdReader, this.typeResolver, custAttr, "Return"));
+                            IEnumerable<UsedAttribute> attrs = attributors
+                                    .Where(predicate: (IAttributor attributor) => attributor.IsApplicable(reader: mdReader, attribute: custAttr, isReturn: true))
+                                    .Select(selector: (IAttributor attributor) => attributor.Parse(reader: mdReader, resolver: this.typeResolver, attribute: custAttr, target: "Return"));
 
                             methodAttributes.AddRange(
-                                attrs
+                                collection: attrs
                             );
                             argumentAttributes.AddRange(
-                                attrs
+                                collection: attrs
                             );
                         }
                         else
                         {
                             argumentAttributes.AddRange(
-                                attributors
-                                    .Where(attributor => attributor.IsApplicable(mdReader, custAttr))
-                                    .Select(attributor => attributor.Parse(mdReader, this.typeResolver, custAttr, "Argument"))
+                                collection: attributors
+                                    .Where(predicate: (IAttributor attributor) => attributor.IsApplicable(reader: mdReader, attribute: custAttr))
+                                    .Select(selector: (IAttributor attributor) => attributor.Parse(reader: mdReader, resolver: this.typeResolver, attribute: custAttr, target: "Argument"))
                             );
                         }
 
-                        if (C99TypeProvider.TryGetC99TypeAttributeValue(this.mdReader, this.typeResolver, custAttr, out string c99Type))
+                        if (C99TypeProvider.TryGetC99TypeAttributeValue(reader: this.mdReader, typeResolver: this.typeResolver, attribute: custAttr, c99Type: out string c99Type))
                         {
                             // Overridden type defined.
                             if (argIndex == ReturnIndex)
@@ -295,17 +300,17 @@ namespace DNNE.Assembly
                             }
                             else
                             {
-                                Debug.Assert(argIndex >= 0);
+                                Debug.Assert(condition: argIndex >= 0);
                                 argumentTypes[argIndex] = c99Type;
                             }
                         }
-                        else if (C99TypeProvider.TryGetC99DeclCodeAttributeValue(this.mdReader, this.typeResolver, custAttr, out string c99Decl))
+                        else if (C99TypeProvider.TryGetC99DeclCodeAttributeValue(reader: this.mdReader, typeResolver: this.typeResolver, attribute: custAttr, c99Decl: out string c99Decl))
                         {
-                            additionalCodeStatements.Add(c99Decl);
+                            additionalCodeStatements.Add(item: c99Decl);
                         }
                     }
 
-                    arguments.Add(new()
+                    arguments.Add(item: new()
                     {
                         Index = argIndex,
                         Name = argIndex != ReturnIndex ? argumentNames[argIndex] : "Return",
@@ -315,9 +320,9 @@ namespace DNNE.Assembly
                     });
                 }
 
-                var xmlDoc = FindXmlDoc(enclosingTypeName.Replace('+', '.') + Type.Delimiter + managedMethodName, argumentTypes);
+                string xmlDoc = FindXmlDoc(fullMethodName: enclosingTypeName.Replace(oldChar: '+', newChar: '.') + Type.Delimiter + managedMethodName, argumentTypes: argumentTypes);
 
-                exportedMethods.Add(new ExportedMethod()
+                exportedMethods.Add(item: new ExportedMethod()
                 {
                     Type = exportAttrType,
                     EnclosingTypeName = enclosingTypeName,
@@ -328,7 +333,7 @@ namespace DNNE.Assembly
                     {
                         Assembly = this.assemblyScope,
                         Module = this.moduleScope,
-                        Type = GetTypeOSPlatformScope(methodDef),
+                        Type = GetTypeOSPlatformScope(methodDef: methodDef),
                         Method = new Scope()
                         {
                             Support = supported.ToImmutableList(),
@@ -340,32 +345,32 @@ namespace DNNE.Assembly
                     XmlDoc = xmlDoc,
                     Attributes = methodAttributes.ToImmutableList(),
                     Arguments = arguments.ToImmutableList(),
-                    ArgumentTypes = ImmutableArray.Create(argumentTypes),
-                    ArgumentNames = ImmutableArray.Create(argumentNames),
+                    ArgumentTypes = ImmutableArray.Create(items: argumentTypes),
+                    ArgumentNames = ImmutableArray.Create(items: argumentNames),
                 });
             }
 
             if (exportedMethods.Count == 0)
             {
-                throw new GeneratorException(this.assemblyPath, "Nothing to export.");
+                throw new GeneratorException(assemblyPath: this.assemblyPath, message: "Nothing to export.");
             }
 
-            var assemblyDefinition = this.mdReader.GetAssemblyDefinition();
+            AssemblyDefinition assemblyDefinition = this.mdReader.GetAssemblyDefinition();
 
-            string assemblyName = this.mdReader.GetString(assemblyDefinition.Name);
+            string assemblyName = this.mdReader.GetString(handle: assemblyDefinition.Name);
 
             return new AssemblyInformation
             {
                 Name = assemblyName,
                 Path = assemblyPath,
                 ExportedTypes = exportedMethods
-                    .GroupBy(m => m.EnclosingTypeName)
+                    .GroupBy(keySelector: (ExportedMethod exportedMethod) => exportedMethod.EnclosingTypeName)
                     .Select(
-                        g => new ExportedType()
+                        selector: (IGrouping<string, ExportedMethod> grouping) => new ExportedType()
                         {
-                            Name = g.Key.Split('.').Last(),
-                            FullName = g.Key,
-                            ExportedMethods = g.ToImmutableList()
+                            Name = grouping.Key.Split(separator: '.').Last(),
+                            FullName = grouping.Key,
+                            ExportedMethods = grouping.ToImmutableList()
                         }
                     )
                     .ToImmutableList(),
@@ -568,9 +573,22 @@ namespace DNNE.Assembly
             {
                 case HandleKind.MemberReference:
                     MemberReference refConstructor = reader.GetMemberReference((MemberReferenceHandle)attribute.Constructor);
-                    TypeReference refType = reader.GetTypeReference((TypeReferenceHandle)refConstructor.Parent);
-                    return (refType.Namespace, refType.Name);
 
+                    if (refConstructor.Parent.IsNil)
+                    {
+                        Debug.Assert(false, "Unknown parent reference kind");
+                        return (null, null);
+                    }
+
+                    switch (refConstructor.Parent.Kind)
+                    {
+                        case HandleKind.TypeReference:
+                            TypeReference refType = reader.GetTypeReference((TypeReferenceHandle)refConstructor.Parent);
+                            return (refType.Namespace, refType.Name);
+                        default:
+                            Debug.Assert(false, "Unknown parent reference kind");
+                            return (null, null);
+                    }
                 case HandleKind.MethodDefinition:
                     MethodDefinition defConstructor = reader.GetMethodDefinition((MethodDefinitionHandle)attribute.Constructor);
                     TypeDefinition defType = reader.GetTypeDefinition(defConstructor.GetDeclaringType());

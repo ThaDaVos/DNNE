@@ -1,7 +1,6 @@
 
 using System.Collections.Immutable;
 using System.Runtime.Serialization;
-using System.Xml.Serialization;
 
 namespace DNNE.Assembly
 {
@@ -10,6 +9,8 @@ namespace DNNE.Assembly
     {
         [DataMember]
         public string Name { get; init; }
+        [DataMember]
+        public string SafeName => Name.Replace("_", "").Replace(".", "_");
         [DataMember]
         public string Path { get; init; }
         [DataMember]

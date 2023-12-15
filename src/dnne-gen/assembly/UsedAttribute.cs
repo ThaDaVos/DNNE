@@ -18,7 +18,7 @@ namespace DNNE.Assembly
             get
             {
                 return this.Name
-                    .Replace(this.TargetLanguage, "", true, CultureInfo.InvariantCulture)
+                    .Replace(this.TargetLanguage ?? "<NULL>", "", true, CultureInfo.InvariantCulture)
                     .Replace("Attribute", "", true, CultureInfo.InvariantCulture);
             }
             set

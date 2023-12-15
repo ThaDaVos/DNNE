@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using System.Reflection.Metadata;
 using DNNE.Languages.C99;
 
@@ -35,23 +36,27 @@ namespace DNNE.Assembly.Attributors
                 TargetLanguage = this.GetLanguage(),
                 Target = target,
                 Value = C99TypeProvider.GetFirstFixedArgAsStringValue(resolver, attribute),
-                Values = GetAttributeArgs(resolver, attribute)
+                Values = GetAttributeArgs(resolver, attribute, reader)
         };
         }
 
-        private Dictionary<string, AttributeArgument> GetAttributeArgs(ICustomAttributeTypeProvider<KnownType> typeResolver, CustomAttribute attribute)
+        private Dictionary<string, AttributeArgument> GetAttributeArgs(ICustomAttributeTypeProvider<KnownType> typeResolver, CustomAttribute attribute, MetadataReader reader)
         {
+            string[] constructorArgumentNames = GetArgumentNamesFromCustomAttribute(reader, attribute);
+
             var arguments = new Dictionary<string, AttributeArgument>();
 
             CustomAttributeValue<KnownType> data = attribute.DecodeValue(typeResolver);
 
-            int count = 1;
+            int count = 0;
             foreach (CustomAttributeTypedArgument<KnownType> item in data.FixedArguments)
             {
-                arguments.Add($"arg{count++}", new AttributeArgument() {
+                arguments.Add(constructorArgumentNames[count], new AttributeArgument() {
                     Type = item.Type,
                     Value = item.Value,
                 });
+
+                count++;
             }
 
             foreach (CustomAttributeNamedArgument<KnownType> item in data.NamedArguments)
@@ -83,6 +88,32 @@ namespace DNNE.Assembly.Attributors
                 default:
                     Debug.Assert(false, "Unknown attribute constructor kind");
                     return (null, null);
+            }
+        }
+
+        internal static string[] GetArgumentNamesFromCustomAttribute(MetadataReader reader, CustomAttribute attribute)
+        {
+            switch (attribute.Constructor.Kind)
+            {
+                case HandleKind.MemberReference:
+                    MemberReference refConstructor = reader.GetMemberReference((MemberReferenceHandle)attribute.Constructor);
+                    return [];
+
+                case HandleKind.MethodDefinition:
+                    MethodDefinition defConstructor = reader.GetMethodDefinition((MethodDefinitionHandle)attribute.Constructor);
+
+                    ParameterHandleCollection parameters = defConstructor.GetParameters();
+                    List<string> names = new (parameters.Count);
+                    foreach (ParameterHandle param in parameters)
+                    {
+                        names.Add(reader.GetString(reader.GetParameter(param).Name));
+                    }
+
+                    return names.ToArray();
+
+                default:
+                    Debug.Assert(false, "Unknown attribute constructor kind");
+                    return [];
             }
         }
     }

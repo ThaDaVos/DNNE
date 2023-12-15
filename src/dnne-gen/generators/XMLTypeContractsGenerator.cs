@@ -41,7 +41,7 @@ namespace DNNE.Generators
                             if (exportedTypes.Contains(attribute.Value)) continue;
 
                             var contractedType = assembly.GetType(attribute.Value)
-                                ?? assembly.ExportedTypes.Where(t => t.Name == attribute.Value || t.FullName == attribute.Value).First();
+                                ?? assembly.ExportedTypes.Where(t => t.Name == attribute.Value || t.FullName == attribute.Value).FirstOrDefault();
 
                             if (contractedType == null)
                             {

@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
     <RootNamespace>dnne_pkg</RootNamespace>
     <IncludeBuildOutput>False</IncludeBuildOutput>
     <PseudoPackageDir>../pkg/</PseudoPackageDir>
@@ -43,6 +44,10 @@
       <Properties>TargetFramework=$(TargetFramework)</Properties>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="../dnne-source/dnne-source.csproj">
+      <Properties>TargetFrameworks=netstandard2.0</Properties>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="../msbuild/DNNE.BuildTasks/DNNE.BuildTasks.csproj">
       <Properties>TargetFrameworks=net472;netstandard2.1</Properties>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
@@ -58,6 +63,7 @@
       <NetStandard21Dest>$(BuildDest)netstandard2.1/</NetStandard21Dest>
       <Net472Dest>$(BuildDest)net472/</Net472Dest>
       <ToolsDest>$(PseudoPackageRoot)tools/</ToolsDest>
+      <AnalyzersDest>$(PseudoPackageRoot)analyzers/dotnet/cs/</AnalyzersDest>
       <PlatformDest>$(ToolsDest)platform/</PlatformDest>
     </PropertyGroup>
 
@@ -71,12 +77,14 @@
       <NetStandard21Task Include="../msbuild/DNNE.BuildTasks/bin/$(Configuration)/netstandard2.1/*" />
       <Net472Task Include="../msbuild/DNNE.BuildTasks/bin/$(Configuration)/net472/*" />
       <DnneGenFiles Include="../dnne-gen/bin/$(Configuration)/$(TargetFramework)/dnne-gen.dll;../dnne-gen/bin/$(Configuration)/$(TargetFramework)/dnne-gen.runtimeconfig.json" />
+      <DnneSourceFiles Include="../dnne-source/bin/$(Configuration)/netstandard2.0/dnne-source.dll" />
       <PlatformFiles Include="../platform/*" />
     </ItemGroup>
     <Copy SourceFiles="@(BuildFiles)" DestinationFolder="$(BuildDest)" />
     <Copy SourceFiles="@(NetStandard21Task)" DestinationFolder="$(NetStandard21Dest)" />
     <Copy SourceFiles="@(Net472Task)" DestinationFolder="$(Net472Dest)" />
     <Copy SourceFiles="@(DnneGenFiles)" DestinationFolder="$(ToolsDest)" />
+    <Copy SourceFiles="@(DnneSourceFiles)" DestinationFolder="$(AnalyzersDest)" />
     <Copy SourceFiles="@(PlatformFiles)" DestinationFolder="$(PlatformDest)" />
 
     <!-- Define the NuPkg content -->

@@ -46,6 +46,7 @@ namespace DNNE.Assembly
             return elementType switch
             {
                 KnownType.SystemType => KnownType.SystemTypeArray,
+                KnownType.String => KnownType.SystemTypeArray,
                 _ => throw new BadImageFormatException("Unexpectedly got an array of unsupported type.")
             };
         }
