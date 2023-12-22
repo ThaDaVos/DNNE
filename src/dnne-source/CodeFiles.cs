@@ -5,6 +5,7 @@ namespace DNNE.Source;
 internal class CodeFiles
 {
     internal const string ATTRIBUTE_ASYNC_UNMANAGED_CALLERS_ONLY_ATTRIBUTE = @"
+#nullable enable
 using System;
 namespace AsyncToUnManaged;
 [AttributeUsage(AttributeTargets.Method, Inherited = false)]
@@ -28,7 +29,8 @@ public sealed class AsyncUnmanagedCallersOnlyAttribute : Attribute
 ";
 
     internal const string CLASS_BRIDGING_CONTEXT = @"
-    using System;
+#nullable enable
+using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,7 +41,7 @@ namespace AsyncToUnManaged;
 /// </summary>
 public sealed class BridgingContext : SynchronizationContext, IDisposable
 {
-    BlockingCollection<Action> _actions;
+    BlockingCollection<Action>? _actions;
     int _pendingOps = 0;
 
     public TResult Run<TResult>(Func<Task<TResult>> taskFunc, CancellationToken token = default(CancellationToken))
@@ -79,7 +81,7 @@ public sealed class BridgingContext : SynchronizationContext, IDisposable
 
     void Complete()
     {
-        _actions.CompleteAdding();
+        _actions?.CompleteAdding();
     }
 
     // SynchronizationContext methods
@@ -103,7 +105,7 @@ public sealed class BridgingContext : SynchronizationContext, IDisposable
 
     public override void Post(SendOrPostCallback d, object? state)
     {
-        _actions.Add(() => d(state));
+        _actions?.Add(() => d(state));
     }
 
     public override void Send(SendOrPostCallback d, object? state)
@@ -113,7 +115,7 @@ public sealed class BridgingContext : SynchronizationContext, IDisposable
 
     public void Dispose()
     {
-        _actions.Dispose();
+        _actions?.Dispose();
     }
 }
 ";

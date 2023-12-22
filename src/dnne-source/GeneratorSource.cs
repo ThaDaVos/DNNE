@@ -45,6 +45,7 @@ internal class GeneratorSource
         ;
 
         StringBuilder source = new($@"
+#nullable enable
 namespace {namespaceName};
 {classDefinition}
 {{
@@ -93,15 +94,15 @@ namespace {namespaceName};
         string arguments = string.Join(", ", [
             ..attribute.ConstructorArguments.Select(a => a.ToCSharpString()),
             ..attribute.NamedArguments.Select(
-                (KeyValuePair<string, TypedConstant> a) => {
-                    string value = a.Value.ToCSharpString();
+                (KeyValuePair<string, TypedConstant> namedArgument) => {
+                    string value = namedArgument.Value.ToCSharpString();
                     
-                    if (a.Value.Kind == TypedConstantKind.Array)
+                    if (namedArgument.Value.Kind == TypedConstantKind.Array)
                     {
-                        value = $"new {a.Value.Type.ToDisplayString()}{{{string.Join(", ", a.Value.Values.Select(v => v.ToCSharpString()))}}}";
+                        value = $"new {namedArgument!.Value.Type.ToDisplayString()}{{{string.Join(", ", namedArgument.Value.Values.Select(v => v.ToCSharpString()))}}}";
                     }
 
-                    return $"{a.Key} = {value}";
+                    return $"{namedArgument.Key} = {value}";
                 }
             )
         ]);
