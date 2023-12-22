@@ -31,7 +31,7 @@ internal class GeneratorSource
 
         string namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
 
-        string classDefinition = 
+        string classDefinition =
             classSymbol switch
             {
                 { DeclaredAccessibility: Accessibility.Public } => $"public",
@@ -90,7 +90,21 @@ namespace {namespaceName};
 
     private string CreateCopyOfAttribute(AttributeData attribute)
     {
-        string arguments = string.Join(", ", attribute.ConstructorArguments.Select(a => a.ToCSharpString()));
+        string arguments = string.Join(", ", [
+            ..attribute.ConstructorArguments.Select(a => a.ToCSharpString()),
+            ..attribute.NamedArguments.Select(
+                (KeyValuePair<string, TypedConstant> a) => {
+                    string value = a.Value.ToCSharpString();
+                    
+                    if (a.Value.Kind == TypedConstantKind.Array)
+                    {
+                        value = $"new {a.Value.Type.ToDisplayString()}{{{string.Join(", ", a.Value.Values.Select(v => v.ToCSharpString()))}}}";
+                    }
+
+                    return $"{a.Key} = {value}";
+                }
+            )
+        ]);
 
         return $"[{attribute.AttributeClass?.ToDisplayString()}({arguments})]";
     }
