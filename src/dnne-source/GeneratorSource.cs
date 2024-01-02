@@ -48,8 +48,7 @@ internal class GeneratorSource
 #nullable enable
 namespace {namespaceName};
 {classDefinition}
-{{
-");
+{{");
 
         foreach (IMethodSymbol method in methods)
         {
