@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System;
 
-namespace DNNE.Source;
+namespace DNNE.Source.Wrappings.InstancedUnManaged;
 
 public class Marker : ISyntaxContextReceiver
 {
-    private const string ATTRIBUTE = "AsyncToUnManaged.AsyncUnmanagedCallersOnlyAttribute";
+    private const string ATTRIBUTE = "DNNE.Wrappings.InstancedUnManaged.InstancedUnmanagedCallersOnlyAttribute";
     internal List<IMethodSymbol> Methods { get; } = new List<IMethodSymbol>();
 
     public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
@@ -19,7 +18,7 @@ public class Marker : ISyntaxContextReceiver
 
             if (
                 methodSymbol != null
-                && methodSymbol.IsAsync == true
+                && methodSymbol.IsStatic == false
                 && methodSymbol.GetAttributes().Any(a => a.AttributeClass?.ToDisplayString() == ATTRIBUTE)
             ) {
                 this.Methods.Add(methodSymbol);

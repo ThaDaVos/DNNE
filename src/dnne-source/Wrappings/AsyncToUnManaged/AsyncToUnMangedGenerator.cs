@@ -3,17 +3,30 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace DNNE.Source;
+namespace DNNE.Source.Wrappings.AsyncToUnManaged;
 
 [Generator]
-public class Generator : ISourceGenerator
+public class AsyncToUnMangedGenerator : ISourceGenerator
 {
     public void Initialize(GeneratorInitializationContext context)
     {
+#if DEBUGGENERATOR
+  if (!System.Diagnostics.Debugger.IsAttached)
+  {
+    System.Diagnostics.Debugger.Launch();
+  }
+#endif
+
         context.RegisterForPostInitialization((i) =>
         {
             i.AddSource("AsyncUnmanagedCallersOnlyAttribute.g.cs", CodeFiles.ATTRIBUTE_ASYNC_UNMANAGED_CALLERS_ONLY_ATTRIBUTE);
-            i.AddSource("BridgingContext.g.cs", CodeFiles.CLASS_BRIDGING_CONTEXT);
+            i.AddSource(
+                "BridgingContext.g.cs", 
+                Shared.CodeFiles.CLASS_BRIDGING_CONTEXT
+                    .Substitute(new () {
+                        {"namespace", "DNNE.Wrappings.AsyncToUnManaged"}
+                    }, true)
+            );
         });
 
         context.RegisterForSyntaxNotifications(() => new Marker());

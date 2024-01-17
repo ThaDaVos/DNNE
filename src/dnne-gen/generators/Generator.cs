@@ -38,9 +38,16 @@ namespace DNNE.Generators
             outputFile = ParseOutPutFileName(outputFile);
 
             // Check if the file exists
-            if (File.Exists(outputFile))
+            if (File.Exists(outputFile) == true)
             {
                 File.Delete(outputFile);
+            }
+
+            string directory = Path.GetDirectoryName(outputFile);
+
+            if (Directory.Exists(directory) == false)
+            {
+                Directory.CreateDirectory(directory);
             }
 
             Emit(File.OpenWrite(outputFile));
@@ -58,7 +65,7 @@ namespace DNNE.Generators
 
         public void Emit(Stream outputStream)
         {
-            if (!this.assemblyInformation.ExportedMethods.Any())
+            if (!this.assemblyInformation.ExportedTypes.Any())
             {
                 throw new GeneratorException(this.assemblyInformation.Path, "Nothing to export.");
             }

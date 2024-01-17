@@ -94,7 +94,8 @@ namespace DNNE.Assembly
                 // XML
                 new XMLTypeContractAttributor(),
                 // Utility
-                new MatrixMethodOfStringsAttributor(),
+                new StringMatrixMethodAttributor(),
+                new IntegerMatrixMethodAttributor(),
             };
 
             List<string> additionalCodeStatements = new List<string>();
@@ -374,7 +375,6 @@ namespace DNNE.Assembly
                         }
                     )
                     .ToImmutableList(),
-                ExportedMethods = exportedMethods.ToImmutableList(),
                 AdditionalStatements = additionalCodeStatements.ToImmutableList(),
             };
         }

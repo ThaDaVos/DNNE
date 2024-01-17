@@ -5,6 +5,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <LangVersion>preview</LangVersion>
+    <IsRoslynComponent>true</IsRoslynComponent>
     <Nullable>enable</Nullable>
     <IncludeBuildOutput>false</IncludeBuildOutput> <!-- Do not include the generator as a lib dependency -->
   </PropertyGroup>
@@ -16,8 +17,13 @@
 
   <ItemGroup>
     <!-- Package the generator in the analyzer directory of the nuget package -->
-    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs"
-      Visible="false" />
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Shared\" />
+    <Folder Include="Wrappings\AsyncToUnManaged\" />
+    <Folder Include="Wrappings\InstancedUnManaged\" />
   </ItemGroup>
 
 </Project>

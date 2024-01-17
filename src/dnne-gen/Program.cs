@@ -27,17 +27,50 @@ using DNNE.Generators;
 
 namespace DNNE
 {
-    partial class Program
+    internal partial class Program
     {
-        public const string SafeMacroRegEx = "[^a-zA-Z0-9_]";
+        internal const string SafeMacroRegEx = "[^a-zA-Z0-9_]";
 
-        struct GeneratorMapping
+        internal static Dictionary<string, GeneratorMapping> PossibleGenerators = new Dictionary<string, GeneratorMapping>()
         {
-            internal Func<AssemblyInformation, IGenerator> Factory { get; init; }
-            internal bool NeedsClassSupport { get; init; }
-        }
+            {
+                "ClarionSource",
+                new GeneratorMapping{
+                    Factory = (i) => new ClarionCodeGenerator(i),
+                    NeedsClassSupport = true
+                } 
+            },
+            {
+                "ClarionInc",
+                new GeneratorMapping{
+                    Factory = (i) => new ClarionIncludeGenerator(i),
+                    NeedsClassSupport = true
+                } 
+            },
+            {
+                "ClarionLib",
+                new GeneratorMapping{
+                    Factory = (i) => new ClarionLibGenerator(i),
+                    NeedsClassSupport = true
+                } 
+            },
+            {
+                "XMLDefinition",
+                new GeneratorMapping{
+                    Factory = (i) => new XMLDefinitionGenerator(i),
+                    NeedsClassSupport = false
+                } 
+            },
+            {
+                "XSDTypeContracts",
+                new GeneratorMapping{
+                    Factory = (i) => new XMLTypeContractsGenerator(i),
+                    NeedsClassSupport = false
+                } 
+            },
+        };
 
-        static void Main(string[] args)
+        internal static void Main(string[] args)
         {
             try
             {
@@ -47,80 +80,18 @@ namespace DNNE
                     args = new[] { "-?" };
                 }
 
-                var possibleGenerators = new Dictionary<string, GeneratorMapping>()
-                {
-                    { "ClarionSource", new GeneratorMapping{ Factory = (info) => new ClarionCodeGenerator(info), NeedsClassSupport = true } },
-                    { "ClarionInc", new GeneratorMapping{ Factory = (info) => new ClarionIncludeGenerator(info), NeedsClassSupport = true } },
-                    { "ClarionLib", new GeneratorMapping{ Factory = (info) => new ClarionLibGenerator(info), NeedsClassSupport = true } },
-                    { "XMLDefinition", new GeneratorMapping{ Factory = (info) => new XMLDefinitionGenerator(info), NeedsClassSupport = false } },
-                    { "XSDTypeContracts", new GeneratorMapping{ Factory = (info) => new XMLTypeContractsGenerator(info), NeedsClassSupport = false } },
-                };
+                ParsedArguments arguments = Parse(args);
 
-                var parsed = Parse(args);
+                Console.WriteLine($"Processing assembly from `{arguments.AssemblyPath}`");
 
-                Console.WriteLine($"Processing assembly from `{parsed.AssemblyPath}`");
+                AssemblyInformation assemblyInformation = Read(arguments.AssemblyPath, arguments.XmlDocFile);
 
-                using (var reader = new AssemblyReader(parsed.AssemblyPath, parsed.XmlDocFile))
-                {
-                    var info = reader.Read();
-
-                    var givenAdditionalGenerators = parsed.AdditionalGenerators?.Split(';', '|', ',') ?? Array.Empty<string>();
-
-                    var includeAllGenerators = givenAdditionalGenerators.Contains("*");
-
-                    var neededGeneratorMappings = possibleGenerators
-                        .Where(
-                            (entry) =>
-                                includeAllGenerators == true
-                                || givenAdditionalGenerators.Contains(entry.Key)
-                                || givenAdditionalGenerators.Any((generator) => entry.Key.StartsWith(generator.TrimEnd('*')))
-                    ).Select((entry) => entry.Value);
-
-                    IGenerator c99Generator;
-                    if (parsed.UseClasses || neededGeneratorMappings.Any((mapping) => mapping.NeedsClassSupport))
-                    {
-                        c99Generator = new C99ClassedGenerator(info);
-                    }
-                    else
-                    {
-                        c99Generator = new C99Generator(info);
-                    }
-
-                    if (string.IsNullOrWhiteSpace(parsed.OutputPath))
-                    {
-                        using (var stream = new MemoryStream())
-                        {
-                            c99Generator.Emit(stream);
-                            Console.Out.Write(stream);
-                        }
-
-                        return;
-                    }
-                    else
-                    {
-                        c99Generator.Emit(parsed.OutputPath);
-                        Console.WriteLine($"Generated export for 'C99' written to '{parsed.OutputPath}'.");
-                    }
-
-                    var generators = neededGeneratorMappings.Select((mapping) => mapping.Factory(info));
-
-                    foreach (var generator in generators)
-                    {
-                        try
-                        {
-                            generator.Emit(parsed.OutputPath);
-                            Console.WriteLine(
-                            $"Generated export for '{generator.GetType().Name.Replace("Generator", "")}' written to '{generator.ParseOutPutFileName(parsed.OutputPath)}'."
-                            );
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(
-                            $"Failed to generated export for '{generator.GetType().Name.Replace("Generator", "")}' error: {e}"
-                            );
-                        }
-                    }
-                }
+                ExecuteGenerators(
+                    arguments.OutputPath,
+                    arguments.UseClasses,
+                    arguments.AdditionalGenerators,
+                    assemblyInformation
+                );
             }
             catch (ParseException pe)
             {
@@ -132,7 +103,7 @@ namespace DNNE
             }
         }
 
-        static ParsedArguments Parse(string[] args)
+        private static ParsedArguments Parse(string[] args)
         {
             var parsed = new ParsedArguments()
             {
@@ -231,6 +202,86 @@ namespace DNNE
             }
 
             return parsed;
+        }
+
+        private static AssemblyInformation Read(string assemblyPath, string xmlDocFile)
+        {
+            using var reader = new AssemblyReader(assemblyPath, xmlDocFile);
+
+            return reader.Read();
+        }
+
+        private static void ExecuteGenerators(string outputPath, bool useClasses, string additionalGenerators, AssemblyInformation assemblyInformation)
+        {
+            IEnumerable<GeneratorMapping> additionalGeneratorMappings = ExtractAdditionalGenerators(additionalGenerators);
+
+            DoC99Generation(
+                outputPath,
+                useClasses || additionalGeneratorMappings.Any((mapping) => mapping.NeedsClassSupport),
+                assemblyInformation
+            );
+
+            IEnumerable<IGenerator> generators = additionalGeneratorMappings.Select((mapping) => mapping.Factory(assemblyInformation));
+
+            DoAdditionalGeneratorsGeneration(outputPath, generators);
+        }
+
+        private static IEnumerable<GeneratorMapping> ExtractAdditionalGenerators(string additionalGenerators)
+        {
+            string[] givenAdditionalGenerators = additionalGenerators?.Split(';', '|', ',') ?? Array.Empty<string>();
+
+            bool includeAllGenerators = givenAdditionalGenerators.Contains("*");
+
+            IEnumerable<GeneratorMapping> neededGeneratorMappings = PossibleGenerators
+                .Where(
+                    predicate: (KeyValuePair<string, GeneratorMapping> entry) =>
+                        includeAllGenerators == true
+                        || givenAdditionalGenerators.Contains(entry.Key)
+                        || givenAdditionalGenerators.Any((generator) => entry.Key.StartsWith(generator.TrimEnd('*')))
+            ).Select(selector: (KeyValuePair<string, GeneratorMapping> entry) => entry.Value);
+            return neededGeneratorMappings;
+        }
+
+        private static void DoC99Generation(string outputPath, bool useClasses, AssemblyInformation assemblyInformation)
+        {
+            IGenerator c99Generator = useClasses
+                ? new C99ClassedGenerator(assemblyInformation)
+                : new C99Generator(assemblyInformation);
+
+            if (string.IsNullOrWhiteSpace(value: outputPath))
+            {
+                using MemoryStream stream = new MemoryStream();
+
+                c99Generator.Emit(outputStream: stream);
+                Console.Out.Write(value: stream);
+
+                return;
+            }
+            else
+            {
+                c99Generator.Emit(outputFile: outputPath);
+                Console.WriteLine(value: $"Generated export for 'C99' written to '{outputPath}'.");
+            }
+        }
+
+        private static void DoAdditionalGeneratorsGeneration(string outputPath, IEnumerable<IGenerator> generators)
+        {
+            foreach (IGenerator generator in generators)
+            {
+                try
+                {
+                    generator.Emit(outputFile: outputPath);
+                    Console.WriteLine(
+                    $"Generated export for '{generator.GetType().Name.Replace("Generator", "")}' written to '{generator.ParseOutPutFileName(outputPath)}'."
+                    );
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(
+                    $"Failed to generated export for '{generator.GetType().Name.Replace("Generator", "")}' error: {e}"
+                    );
+                }
+            }
         }
     }
 }

@@ -16,8 +16,6 @@ namespace DNNE.Assembly
         [DataMember]
         public ImmutableList<ExportedType> ExportedTypes { get; init; }
         [DataMember]
-        public ImmutableList<ExportedMethod> ExportedMethods { get; init; }
-        [DataMember]
         public ImmutableList<string> AdditionalStatements { get; init; }
     }
 }

@@ -1,8 +1,8 @@
 namespace DNNE.Assembly.Attributors
 {
-    internal class MatrixMethodOfStringsAttributor : Attributor
+    internal class IntegerMatrixMethodAttributor : Attributor
     {
-        protected override string GetAttributeName() => "MatrixMethodOfStringsAttribute";
+        protected override string GetAttributeName() => "IntegerMatrixMethodAttribute";
 
         protected override string GetLanguage() => null;
         

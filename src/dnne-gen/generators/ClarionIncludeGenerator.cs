@@ -101,12 +101,12 @@ instance LONG"
                                 .Where(s => !string.IsNullOrEmpty(s))
                             );
 
-                            if (export.Attributes.Any(attr => attr.Group.StartsWith("MatrixMethod") && attr.Target == "Method"))
+                            if (export.Attributes.Any(attr => attr.Group.Contains("MatrixMethod") && attr.Target == "Method"))
                             {
-                                List<string> processedParameters = new (export.Attributes.Where(attr => attr.Group.StartsWith("MatrixMethod") && attr.Target == "Method").Count());
+                                List<string> processedParameters = new (export.Attributes.Where(attr => attr.Group.Contains("MatrixMethod") && attr.Target == "Method").Count());
                                 List<string> matrixedFormats = [METHOD_FORMAT];
 
-                                foreach (UsedAttribute attribute in export.Attributes.Where(attr => attr.Group.StartsWith("MatrixMethod") && attr.Target == "Method"))
+                                foreach (UsedAttribute attribute in export.Attributes.Where(attr => attr.Group.Contains("MatrixMethod") && attr.Target == "Method"))
                                 {
                                     attribute.Values.TryGetValue("parameter", out AttributeArgument parameterArgument);
                                     attribute.Values.TryGetValue("values", out AttributeArgument valuesArgument);

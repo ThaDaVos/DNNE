@@ -111,7 +111,7 @@ namespace DNNE.Generators
         {safeTypeName}_{export.MethodName}(SELF.instance);");
                             break;
                         default:
-                            if (export.Attributes.Any(attr => attr.Group.StartsWith("MatrixMethod") && attr.Target == "Method"))
+                            if (export.Attributes.Any(attr => attr.Group.Contains("MatrixMethod") && attr.Target == "Method"))
                             {
                                 List<string> matrixedMethodNames = ["{0}"];
                                 Dictionary<string, string> matrixedArgumentsByMethodName = new()
@@ -123,7 +123,7 @@ namespace DNNE.Generators
                                     ["{0}"] = argumentNames,
                                 };
 
-                                foreach (UsedAttribute attribute in export.Attributes.Where(attr => attr.Group.StartsWith("MatrixMethod") && attr.Target == "Method"))
+                                foreach (UsedAttribute attribute in export.Attributes.Where(attr => attr.Group.Contains("MatrixMethod") && attr.Target == "Method"))
                                 {
                                     attribute.Values.TryGetValue("parameter", out AttributeArgument parameterArgument);
                                     attribute.Values.TryGetValue("values", out AttributeArgument valuesArgument);

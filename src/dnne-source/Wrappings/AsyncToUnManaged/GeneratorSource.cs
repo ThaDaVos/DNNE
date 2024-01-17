@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace DNNE.Source;
+namespace DNNE.Source.Wrappings.AsyncToUnManaged;
 
 internal class GeneratorSource
 {
@@ -65,12 +64,12 @@ namespace {namespaceName};
     {
         string methodName = method.Name.EndsWith("Async") ? method.Name.Remove(method.Name.Length - 5) : $"{method.Name}Sync";
         string returnType = method.ReturnType.ToDisplayString();
-        string parameters = string.Join(", ", method.Parameters.Select(p => $"{p.Type.ToDisplayString()} {p.Name}"));
+        string parameters = string.Join(", ", method.Parameters.Select(p => p.ToDisplayString()));
 
         string attributes = string
-            .Join("\n", method.GetAttributes().Select(CreateCopyOfAttribute))
+            .Join("\n", method.GetAttributes().Select(attribute => attribute.CreateCopyOfAttributeAsString()))
             .Replace(
-                "AsyncToUnManaged.AsyncUnmanagedCallersOnly",
+                "DNNE.Wrappings.AsyncToUnManaged.AsyncUnmanagedCallersOnly",
                 "System.Runtime.InteropServices.UnmanagedCallersOnly"
             );
 
@@ -82,30 +81,9 @@ namespace {namespaceName};
         {attributes}
         public static {returnType} {methodName}({parameters})
         {{
-            using var context = new AsyncToUnManaged.BridgingContext();
+            using var context = new DNNE.Wrappings.AsyncToUnManaged.BridgingContext();
 
-            return context.Run(() => {method.Name}({string.Join(", ", method.Parameters.Select(p => p.Name))}));
+            return context.Run(() => {method.Name}({string.Join(", ", method.Parameters.Select(p => p.GetSafeguardedParameterName()))}));
         }}";
-    }
-
-    private string CreateCopyOfAttribute(AttributeData attribute)
-    {
-        string arguments = string.Join(", ", [
-            ..attribute.ConstructorArguments.Select(a => a.ToCSharpString()),
-            ..attribute.NamedArguments.Select(
-                (KeyValuePair<string, TypedConstant> namedArgument) => {
-                    string value = namedArgument.Value.ToCSharpString();
-                    
-                    if (namedArgument.Value.Kind == TypedConstantKind.Array)
-                    {
-                        value = $"new {namedArgument!.Value.Type.ToDisplayString()}{{{string.Join(", ", namedArgument.Value.Values.Select(v => v.ToCSharpString()))}}}";
-                    }
-
-                    return $"{namedArgument.Key} = {value}";
-                }
-            )
-        ]);
-
-        return $"[{attribute.AttributeClass?.ToDisplayString()}({arguments})]";
     }
 }

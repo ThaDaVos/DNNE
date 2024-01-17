@@ -124,92 +124,95 @@ extern void* get_fast_callable_managed_function(
 ");
             int count = 1;
             var map = new StringDictionary();
-            foreach (var method in this.assemblyInformation.ExportedMethods)
+            foreach (var enclosingType in this.assemblyInformation.ExportedTypes)
             {
-                if (map.ContainsKey(method.EnclosingTypeName))
+                foreach (var method in enclosingType.ExportedMethods)
                 {
-                    continue;
-                }
+                    if (map.ContainsKey(method.EnclosingTypeName))
+                    {
+                        continue;
+                    }
 
-                string id = $"t{count++}_name";
-                implStream.WriteLine(
-$@"#ifdef DNNE_TARGET_NET_FRAMEWORK
+                    string id = $"t{count++}_name";
+                    implStream.WriteLine(
+    $@"#ifdef DNNE_TARGET_NET_FRAMEWORK
     static const char_t* {id} = DNNE_STR(""{method.EnclosingTypeName}"");
 #else
     static const char_t* {id} = DNNE_STR(""{method.EnclosingTypeName}, {this.assemblyInformation.Name}"");
 #endif // !DNNE_TARGET_NET_FRAMEWORK
 ");
-                map.Add(method.EnclosingTypeName, id);
-            }
+                    map.Add(method.EnclosingTypeName, id);
+                }
 
-            // Emit the exports
-            implStream.WriteLine(
-@"
+                // Emit the exports
+                implStream.WriteLine(
+    @$"
 //
-// Exports
+// Exports for {enclosingType.Name}
 //
 ");
-            foreach (var export in this.assemblyInformation.ExportedMethods)
-            {
-                (var preguard, var postguard) = C99TypeProvider.GetC99PlatformGuards(export.Platforms);
 
-                // Create declaration and call signature.
-                string delim = "";
-                var declsig = new StringBuilder();
-                var callsig = new StringBuilder();
-                for (int i = 0; i < export.ArgumentTypes.Length; ++i)
+                foreach (var export in enclosingType.ExportedMethods)
                 {
-                    var argName = export.ArgumentNames[i] ?? $"arg{i}";
-                    declsig.AppendFormat("{0}{1} {2}", delim, export.ArgumentTypes[i], argName);
-                    callsig.AppendFormat("{0}{1}", delim, argName);
-                    delim = ", ";
-                }
+                    (var preguard, var postguard) = C99TypeProvider.GetC99PlatformGuards(export.Platforms);
 
-                // Special casing for void signature.
-                if (declsig.Length == 0)
-                {
-                    declsig.Append("void");
-                }
+                    // Create declaration and call signature.
+                    string delim = "";
+                    var declsig = new StringBuilder();
+                    var callsig = new StringBuilder();
+                    for (int i = 0; i < export.ArgumentTypes.Length; ++i)
+                    {
+                        var argName = export.ArgumentNames[i] ?? $"arg{i}";
+                        declsig.AppendFormat("{0}{1} {2}", delim, export.ArgumentTypes[i], argName);
+                        callsig.AppendFormat("{0}{1}", delim, argName);
+                        delim = ", ";
+                    }
 
-                // Special casing for void return.
-                string returnStatementKeyword = "return ";
-                if (export.ReturnType.Equals("void"))
-                {
-                    returnStatementKeyword = string.Empty;
-                }
+                    // Special casing for void signature.
+                    if (declsig.Length == 0)
+                    {
+                        declsig.Append("void");
+                    }
 
-                string callConv = C99TypeProvider.GetC99CallConv(export.CallingConvention);
+                    // Special casing for void return.
+                    string returnStatementKeyword = "return ";
+                    if (export.ReturnType.Equals("void"))
+                    {
+                        returnStatementKeyword = string.Empty;
+                    }
 
-                string classNameConstant = map[export.EnclosingTypeName];
-                Debug.Assert(!string.IsNullOrEmpty(classNameConstant));
+                    string callConv = C99TypeProvider.GetC99CallConv(export.CallingConvention);
 
-                // Generate the acquire managed function based on the export type.
-                string acquireManagedFunction;
-                if (export.Type == ExportType.Export)
-                {
-                    acquireManagedFunction =
-$@"const char_t* methodName = DNNE_STR(""{export.MethodName}"");
+                    string classNameConstant = map[export.EnclosingTypeName];
+                    Debug.Assert(!string.IsNullOrEmpty(classNameConstant));
+
+                    // Generate the acquire managed function based on the export type.
+                    string acquireManagedFunction;
+                    if (export.Type == ExportType.Export)
+                    {
+                        acquireManagedFunction =
+    $@"const char_t* methodName = DNNE_STR(""{export.MethodName}"");
         const char_t* delegateType = DNNE_STR(""{export.EnclosingTypeName}+{export.MethodName}Delegate, {this.assemblyInformation.Name}"");
         {export.ExportName}_ptr = ({export.ReturnType}({callConv}*)({declsig}))get_callable_managed_function({classNameConstant}, methodName, delegateType);";
 
-                }
-                else
-                {
-                    Debug.Assert(export.Type == ExportType.UnmanagedCallersOnly);
-                    acquireManagedFunction =
-$@"const char_t* methodName = DNNE_STR(""{export.MethodName}"");
+                    }
+                    else
+                    {
+                        Debug.Assert(export.Type == ExportType.UnmanagedCallersOnly);
+                        acquireManagedFunction =
+    $@"const char_t* methodName = DNNE_STR(""{export.MethodName}"");
         {export.ExportName}_ptr = ({export.ReturnType}({callConv}*)({declsig}))get_fast_callable_managed_function({classNameConstant}, methodName);";
-                }
+                    }
 
-                // Declare export
-                writer.WriteLine(
-$@"{preguard}// Computed from {export.EnclosingTypeName}{Type.Delimiter}{export.MethodName}{export.XmlDoc}
+                    // Declare export
+                    writer.WriteLine(
+    $@"{preguard}// Computed from {export.EnclosingTypeName}{Type.Delimiter}{export.MethodName}{export.XmlDoc}
 DNNE_EXTERN_C DNNE_API {export.ReturnType} {callConv} {export.ExportName}({declsig});
 {postguard}");
 
-                // Define export in implementation stream
-                implStream.WriteLine(
-$@"{preguard}// Computed from {export.EnclosingTypeName}{Type.Delimiter}{export.MethodName}
+                    // Define export in implementation stream
+                    implStream.WriteLine(
+    $@"{preguard}// Computed from {export.EnclosingTypeName}{Type.Delimiter}{export.MethodName}
 static {export.ReturnType} ({callConv}* {export.ExportName}_ptr)({declsig});
 DNNE_EXTERN_C DNNE_API {export.ReturnType} {callConv} {export.ExportName}({declsig})
 {{
@@ -220,8 +223,8 @@ DNNE_EXTERN_C DNNE_API {export.ReturnType} {callConv} {export.ExportName}({decls
     {returnStatementKeyword}{export.ExportName}_ptr({callsig});
 }}
 {postguard}");
+                }
             }
-
             // Emit implementation closing
             implStream.Write($"#endif // {compileAsSourceDefine}");
 
