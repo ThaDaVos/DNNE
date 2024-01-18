@@ -154,6 +154,7 @@ typedef int (CORECLR_DELEGATE_CALLTYPE* component_entry_point_fn)(void* arg, int
 
 typedef volatile long dnne_lock_handle;
 #define DNNE_LOCK_OPEN (0)
+#define DNNE_LOCK_TAKEN (-1)
 
 #ifdef DNNE_WINDOWS
 
@@ -287,18 +288,48 @@ static void set_current_error(int err)
     errno = err;
 }
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#ifdef __arm__
+// warning: large atomic operation may incur significant performance penalty; the access size (4 bytes) exceeds the max lock-free size (0  bytes)
+#pragma clang diagnostic ignored "-Watomic-alignment"
+#endif // __arm__
+#endif // __clang__
+
 static void enter_lock(dnne_lock_handle* lock)
 {
-    while (__sync_val_compare_and_swap(lock, DNNE_LOCK_OPEN, -1) != DNNE_LOCK_OPEN)
+#ifdef __arm__
+    // Cross compiling for arm32 platforms can cause issues using __atomic_compare_exchange_n().
+    // Instead of trying to special case them, always use the compiler (gcc/clang) intrinsic.
+    while (__sync_lock_test_and_set(lock, DNNE_LOCK_TAKEN) != DNNE_LOCK_OPEN)
     {
         (void)sched_yield(); // Yield instead of sleeping.
     }
+#else
+    long tmp = DNNE_LOCK_OPEN;
+    while (!__atomic_compare_exchange_n(lock, &tmp, DNNE_LOCK_TAKEN, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST))
+    {
+        (void)sched_yield(); // Yield instead of sleeping.
+        tmp = DNNE_LOCK_OPEN;
+    }
+#endif // !__arm__
 }
 
 static void exit_lock(dnne_lock_handle* lock)
 {
-    __atomic_exchange_n(lock, DNNE_LOCK_OPEN, __ATOMIC_ACQ_REL);
+#ifdef __arm__
+    // Cross compiling for arm32 platforms can cause issues using __atomic_exchange_n().
+    // Instead of trying to special case them, always use the compiler (gcc/clang) intrinsic.
+    __sync_lock_release(lock);
+    assert(*lock == DNNE_LOCK_OPEN);
+#else
+    __atomic_exchange_n(lock, DNNE_LOCK_OPEN, __ATOMIC_SEQ_CST);
+#endif // !__arm__
 }
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif // __clang__
 
 #endif // !DNNE_WINDOWS
 

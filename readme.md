@@ -20,7 +20,8 @@ This work is inspired by work in the [Xamarin][xamarin_embed_link], [CoreRT][cor
     - The x86_64 version of the .NET runtime is the default install.
     - In order to target x86, the x86 .NET runtime must be explicitly installed.
 * Windows 10 SDK - Installed with Visual Studio.
-* .NET Framework SDK - Installed with Visual Studio. Only required if targeting a .NET Framework TFM.
+* .NET Framework 4.x SDK - Installed with Visual Studio. Only required if targeting a .NET Framework TFM.
+    - See [.NET Framework support](#netfx).
 * x86, x86_64, ARM64 compilation supported.
     - The Visual Studio package containing the desired compiler architecture must have been installed.
 
@@ -82,7 +83,7 @@ struct some_data
 };
 ```
 
-The following attributes can be used to enable the above scenario. They must be defined by the project in order to be used - DNNE provides no assembly to reference. Refer to [`ExportingAssembly`](./test/ExportingAssembly/Dnne.Attributes.cs) for an example.
+The following attributes can be used to enable the above scenario. They are automatically generated into projects referencing DNNE, because DNNE provides no assembly to reference. If your build system or IDE does not support source generators (e.g., you're using a version older than Visual Studio 2022, or .NET Framework with `packages.config`), you will have to define these types yourself:
 
 ```CSharp
 namespace DNNE
@@ -97,7 +98,8 @@ namespace DNNE
     ///   - stdint.h
     ///   - dnne.h
     /// </remarks>
-    internal class C99DeclCodeAttribute : System.Attribute
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Parameter, Inherited = false)]
+    internal sealed class C99DeclCodeAttribute : System.Attribute
     {
         public C99DeclCodeAttribute(string code) { }
     }
@@ -108,7 +110,8 @@ namespace DNNE
     /// <remarks>
     /// The level of indirection should be included in the supplied string.
     /// </remarks>
-    internal class C99TypeAttribute : System.Attribute
+    [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.ReturnValue, Inherited = false)]
+    internal sealed class C99TypeAttribute : System.Attribute
     {
         public C99TypeAttribute(string code) { }
     }
@@ -195,12 +198,13 @@ In addition to providing declaration code directly, users can also supply `#incl
 
 ### Experimental attribute
 
-There are scenarios where updating `UnmanagedCallersOnlyAttribute` may take time. In order to enable independent development and experimentation, the `DNNE.ExportAttribute` is also respected. This type can be modified to suit one's needs and `dnne-gen` updated to respect those changes at source gen time. The user should define the following in their assembly. They can then modify the attribute and `dnne-gen` as needed.
+There are scenarios where updating `UnmanagedCallersOnlyAttribute` may take time. In order to enable independent development and experimentation, the `DNNE.ExportAttribute` is also respected. Like other DNNE attributes, this type is also automatically generated into projects referencing the DNNE package. This type can be modified to suit one's needs (by tweaking the generated source in `dnne-analyzers`) and `dnne-gen` updated as needed to respect those changes at source gen time.
 
 ``` CSharp
 namespace DNNE
 {
-    internal class ExportAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Method, Inherited = false)]
+    internal sealed class ExportAttribute : Attribute
     {
         public ExportAttribute() { }
         public string EntryPoint { get; set; }
@@ -225,8 +229,6 @@ public class Exports
 }
 ```
 
-<a name="nativeapi"></a>
-
 ## Native API
 
 The native API is defined in [`src/platform/dnne.h`](./src/platform/dnne.h).
@@ -247,6 +249,19 @@ Failure to load the runtime or find an export results in the native library call
 
 The `preload_runtime()` or `try_preload_runtime()` functions can be used to preload the runtime. This may be desirable prior to calling an export to avoid the cost of loading the runtime during the first export dispatch.
 
+<a name="netfx"></a>
+
+## .NET Framework support
+
+.NET Framework support is limited to the Windows platform. This limitation is in place because .NET Framework only runs on the Windows platform.
+
+DNNE has support for targeting .NET Framework v4.x TFMs&mdash;there is no support for v2.0 or v3.5. DNNE respects multi-targeting using the `TargetFrameworks` MSBuild property. For any .NET Framework v4.x TFM, DNNE will produce a native binary that will activate .NET Framework.
+
+In non-.NET Framework scenarios, `.deps.json` files are generated during compilation that help, at run-time, to find assemblies. This is different than .NET Framework, which has a more complicated application model. One area where this difference can be particularly confusing is during initial load and activation of a managed assembly. Tools like [`fuslogvw.exe`](https://learn.microsoft.com/dotnet/framework/tools/fuslogvw-exe-assembly-binding-log-viewer) can help to understand loading failures in .NET Framework.
+
+Due to how .NET Framework is being activated in DNNE, the managed DLL typically needs to be located next to the running EXE rather than the native DLL produced by DNNE. Alternatively, the EXE loading the DNNE generated DLL can define a [`.config` file](https://learn.microsoft.com/dotnet/framework/configure-apps/) that defines probing paths.
+
+
 # FAQs
 
 * I am not using one of the supported compilers and hitting an issue of missing `intptr_t` type, what can I do?
@@ -264,7 +279,7 @@ The `preload_runtime()` or `try_preload_runtime()` functions can be used to prel
 * Along with exporting a function, I would also like to export data. Is there a way to export a static variable defined in .NET?
   * There is no simple way to do this starting from .NET. DNNE could be updated to read static metadata and then generate the appropriate export in C code, but that approach is complicated by how static data can be defined during module load in .NET. It is recommended instead to define the desired static data in a separate translation unit (`.c` file) and include it in the native build through the `DnneCompilerUserFlags` property.
 * Does DNNE support targeting .NET Framework?
-  * Yes. DNNE has support for targeting .NET Framework v4.x TFMs&mdash;there is no support for v2.0 or v3.5. DNNE respects multi-targeting using the `TargetFrameworks` MSBuild property. For any .NET Framework v4.x TFM, DNNE will produce a native binary that will activate .NET Framework. Note there are assembly loading semantic differences between .NET Framework and .NET Core. Tools like [`fuslogvw.exe`](https://learn.microsoft.com/dotnet/framework/tools/fuslogvw-exe-assembly-binding-log-viewer) can help to understand loading failures in .NET Framework. Due to how .NET Framework is being activated, the managed DLL typically needs to be located next to the running EXE rather than the native DLL produced by DNNE. Alternatively, the EXE can define a [`.config` file](https://learn.microsoft.com/dotnet/framework/configure-apps/) that defines probing paths.
+  * Yes, see [.NET Framework support](#netfx).
 
 # Additional References
 

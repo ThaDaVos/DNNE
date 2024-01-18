@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -20,12 +20,13 @@
     <PackageId>DNNE</PackageId>
     <Build>$([System.DateTime]::op_Subtraction($([System.DateTime]::get_Now().get_Date()),$([System.DateTime]::new(2000,1,1))).get_TotalDays())</Build>
     <Revision>$([MSBuild]::Divide($([System.DateTime]::get_Now().get_TimeOfDay().get_TotalSeconds()),2).ToString('F0'))</Revision>
-    <Version>2.0.1-patched-$(Build).$(Revision)</Version>
+    <Version>2.0.6-patched-$(Build).$(Revision)</Version>
     <Authors>AaronRobinsonMSFT</Authors>
     <Owners>AaronRobinsonMSFT</Owners>
     <Description>Package used to generated native exports for .NET assemblies.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/AaronRobinsonMSFT/DNNE</PackageProjectUrl>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/AaronRobinsonMSFT/DNNE</RepositoryUrl>
     <RepositoryType>Git</RepositoryType>
     <PackageTags>pinvoke interop unmanagedcallersonly exports</PackageTags>
@@ -40,6 +41,9 @@
 
   <!-- Reference the project to trigger build -->
   <ItemGroup>
+    <ProjectReference  Include="../dnne-analyzers/dnne-analyzers.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
     <ProjectReference Include="../dnne-gen/dnne-gen.csproj">
       <Properties>TargetFramework=$(TargetFramework)</Properties>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
@@ -65,6 +69,8 @@
       <ToolsDest>$(PseudoPackageRoot)tools/</ToolsDest>
       <AnalyzersDest>$(PseudoPackageRoot)analyzers/dotnet/cs/</AnalyzersDest>
       <PlatformDest>$(ToolsDest)platform/</PlatformDest>
+      <AnalyzersDest>$(PseudoPackageRoot)analyzers/</AnalyzersDest>
+      <CSAnalyzersDest>$(AnalyzersDest)dotnet/cs</CSAnalyzersDest>
     </PropertyGroup>
 
     <!-- Create the pseudo package directories -->
@@ -74,18 +80,22 @@
     <ItemGroup>
       <BuildFiles Include="../msbuild/DNNE.props" />
       <BuildFiles Include="../msbuild/DNNE.targets" />
+      <BuildFiles Include="../dnne-analyzers/DNNE.Analyzers.targets" />
       <NetStandard21Task Include="../msbuild/DNNE.BuildTasks/bin/$(Configuration)/netstandard2.1/*" />
       <Net472Task Include="../msbuild/DNNE.BuildTasks/bin/$(Configuration)/net472/*" />
       <DnneGenFiles Include="../dnne-gen/bin/$(Configuration)/$(TargetFramework)/dnne-gen.dll;../dnne-gen/bin/$(Configuration)/$(TargetFramework)/dnne-gen.runtimeconfig.json" />
       <DnneSourceFiles Include="../dnne-source/bin/$(Configuration)/netstandard2.0/dnne-source.dll" />
       <PlatformFiles Include="../platform/*" />
+      <CSAnalyzers Include="../dnne-analyzers/bin/$(Configuration)/netstandard2.0/dnne-analyzers.dll" />
     </ItemGroup>
+    <Copy SourceFiles="../../$(PackageReadmeFile)" DestinationFolder="$(PseudoPackageRoot)" />
     <Copy SourceFiles="@(BuildFiles)" DestinationFolder="$(BuildDest)" />
     <Copy SourceFiles="@(NetStandard21Task)" DestinationFolder="$(NetStandard21Dest)" />
     <Copy SourceFiles="@(Net472Task)" DestinationFolder="$(Net472Dest)" />
     <Copy SourceFiles="@(DnneGenFiles)" DestinationFolder="$(ToolsDest)" />
     <Copy SourceFiles="@(DnneSourceFiles)" DestinationFolder="$(AnalyzersDest)" />
     <Copy SourceFiles="@(PlatformFiles)" DestinationFolder="$(PlatformDest)" />
+    <Copy SourceFiles="@(CSAnalyzers)" DestinationFolder="$(CSAnalyzersDest)" />
 
     <!-- Define the NuPkg content -->
     <ItemGroup>

@@ -21,9 +21,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "platform", "platform", "{95
 	ProjectSection(SolutionItems) = preProject
 		src\platform\dnne.h = src\platform\dnne.h
 		src\platform\platform.c = src\platform\platform.c
+		src\platform\platform_v4.cpp = src\platform\platform_v4.cpp
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DNNE.SourceGeneratorTests", "test\DNNE.SourceGeneratorTests\DNNE.SourceGeneratorTests.csproj", "{16B6CF54-E244-461D-9851-1963C8387258}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dnne-analyzers", "src\dnne-analyzers\dnne-analyzers.csproj", "{2A4C07AB-EAA1-4B80-8A80-BD2DB6375C35}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,6 +61,10 @@ Global
 		{0378BA14-99ED-40CB-BD8F-B9979867FB5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0378BA14-99ED-40CB-BD8F-B9979867FB5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0378BA14-99ED-40CB-BD8F-B9979867FB5C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A4C07AB-EAA1-4B80-8A80-BD2DB6375C35}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A4C07AB-EAA1-4B80-8A80-BD2DB6375C35}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A4C07AB-EAA1-4B80-8A80-BD2DB6375C35}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A4C07AB-EAA1-4B80-8A80-BD2DB6375C35}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
