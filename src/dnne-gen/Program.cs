@@ -31,42 +31,42 @@ namespace DNNE
     {
         internal const string SafeMacroRegEx = "[^a-zA-Z0-9_]";
 
-        internal static Dictionary<string, GeneratorMapping> PossibleGenerators = new Dictionary<string, GeneratorMapping>()
+        internal readonly static Dictionary<string, GeneratorMapping> POSSIBLE_GENERATORS = new Dictionary<string, GeneratorMapping>()
         {
             {
                 "ClarionSource",
                 new GeneratorMapping{
                     Factory = (i) => new ClarionCodeGenerator(i),
                     NeedsClassSupport = true
-                } 
+                }
             },
             {
                 "ClarionInc",
                 new GeneratorMapping{
                     Factory = (i) => new ClarionIncludeGenerator(i),
                     NeedsClassSupport = true
-                } 
+                }
             },
             {
                 "ClarionLib",
                 new GeneratorMapping{
                     Factory = (i) => new ClarionLibGenerator(i),
                     NeedsClassSupport = true
-                } 
+                }
             },
             {
                 "XMLDefinition",
                 new GeneratorMapping{
                     Factory = (i) => new XMLDefinitionGenerator(i),
                     NeedsClassSupport = false
-                } 
+                }
             },
             {
                 "XSDTypeContracts",
                 new GeneratorMapping{
                     Factory = (i) => new XMLTypeContractsGenerator(i),
                     NeedsClassSupport = false
-                } 
+                }
             },
         };
 
@@ -206,7 +206,7 @@ namespace DNNE
 
         private static AssemblyInformation Read(string assemblyPath, string xmlDocFile)
         {
-            using var reader = new AssemblyReader(assemblyPath, xmlDocFile);
+            using AssemblyReader reader = new AssemblyReader(assemblyPath, xmlDocFile);
 
             return reader.Read();
         }
@@ -232,7 +232,7 @@ namespace DNNE
 
             bool includeAllGenerators = givenAdditionalGenerators.Contains("*");
 
-            IEnumerable<GeneratorMapping> neededGeneratorMappings = PossibleGenerators
+            IEnumerable<GeneratorMapping> neededGeneratorMappings = POSSIBLE_GENERATORS
                 .Where(
                     predicate: (KeyValuePair<string, GeneratorMapping> entry) =>
                         includeAllGenerators == true
@@ -254,8 +254,6 @@ namespace DNNE
 
                 c99Generator.Emit(outputStream: stream);
                 Console.Out.Write(value: stream);
-
-                return;
             }
             else
             {

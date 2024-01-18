@@ -30,6 +30,23 @@ namespace DNNE.Assembly
         internal readonly IDictionary<TypeDefinitionHandle, Scope> typePlatformScenarios = new Dictionary<TypeDefinitionHandle, Scope>();
         internal readonly Dictionary<string, string> loadedXmlDocumentation;
 
+        internal readonly static List<IAttributor> ATTRIBUTORS = new()
+        {
+            // C99
+            new C99DeclCodeAttributor(),
+            new C99TypeAttributor(),
+            // Clarion
+            new ClarionDeclCodeAttributor(),
+            new ClarionIncCodeAttributor(),
+            new ClarionTypeAttributor(),
+            new ClarionReturnTypeAttributor(),
+            // XML
+            new XMLTypeContractAttributor(),
+            // Utility
+            new StringMatrixMethodAttributor(),
+            new IntegerMatrixMethodAttributor(),
+        };
+
         public AssemblyReader(string validAssemblyPath, string xmlDocFile)
         {
             this.assemblyPath = validAssemblyPath;
@@ -81,23 +98,6 @@ namespace DNNE.Assembly
 
         public AssemblyInformation Read()
         {
-            List<IAttributor> attributors = new()
-            {
-                // C99
-                new C99DeclCodeAttributor(),
-                new C99TypeAttributor(),
-                // Clarion
-                new ClarionDeclCodeAttributor(),
-                new ClarionIncCodeAttributor(),
-                new ClarionTypeAttributor(),
-                new ClarionReturnTypeAttributor(),
-                // XML
-                new XMLTypeContractAttributor(),
-                // Utility
-                new StringMatrixMethodAttributor(),
-                new IntegerMatrixMethodAttributor(),
-            };
-
             List<string> additionalCodeStatements = new List<string>();
             List<ExportedMethod> exportedMethods = new List<ExportedMethod>();
             foreach (MethodDefinitionHandle methodDefHandle in this.mdReader.MethodDefinitions)
@@ -124,7 +124,7 @@ namespace DNNE.Assembly
                     ExportType currAttrType = this.GetExportAttributeType(attribute: customAttr);
 
                     methodAttributes.AddRange(
-                        collection: attributors
+                        collection: ATTRIBUTORS
                             .Where(predicate: (IAttributor attributor) => attributor.IsApplicable(reader: mdReader, attribute: customAttr))
                             .Select(selector: (IAttributor attributor) => attributor.Parse(reader: mdReader, resolver: this.typeResolver, attribute: customAttr, target: "Method"))
                     );
@@ -187,6 +187,25 @@ namespace DNNE.Assembly
                                         foreach (CustomAttributeTypedArgument<KnownType> cct in (ImmutableArray<CustomAttributeTypedArgument<KnownType>>)arg.Value)
                                         {
                                             Debug.Assert(condition: cct.Type == KnownType.SystemType);
+
+                                            callConv = (KnownType)cct.Value switch
+                                            {
+                                                KnownType.Unknown => throw new NotImplementedException(),
+                                                KnownType.I4 => throw new NotImplementedException(),
+                                                KnownType.CallingConvention => throw new NotImplementedException(),
+                                                KnownType.CallConvCdecl => throw new NotImplementedException(),
+                                                KnownType.CallConvStdcall => throw new NotImplementedException(),
+                                                KnownType.CallConvThiscall => throw new NotImplementedException(),
+                                                KnownType.CallConvFastcall => throw new NotImplementedException(),
+                                                KnownType.String => throw new NotImplementedException(),
+                                                KnownType.SystemTypeArray => throw new NotImplementedException(),
+                                                KnownType.SystemType => throw new NotImplementedException(),
+                                                KnownType.Type => throw new NotImplementedException(),
+                                                KnownType.Class => throw new NotImplementedException(),
+                                                KnownType.ValueType => throw new NotImplementedException(),
+                                                _ => throw new NotSupportedException($"Unknown KnownType: {cct.Value}")
+                                            };
+
                                             switch ((KnownType)cct.Value)
                                             {
                                                 case KnownType.CallConvCdecl:
@@ -200,6 +219,8 @@ namespace DNNE.Assembly
                                                     break;
                                                 case KnownType.CallConvFastcall:
                                                     callConv = SignatureCallingConvention.FastCall;
+                                                    break;
+                                                default:
                                                     break;
                                             }
                                         }
@@ -272,7 +293,7 @@ namespace DNNE.Assembly
 
                         if (argIndex == ReturnIndex)
                         {
-                            IEnumerable<UsedAttribute> attrs = attributors
+                            IEnumerable<UsedAttribute> attrs = ATTRIBUTORS
                                     .Where(predicate: (IAttributor attributor) => attributor.IsApplicable(reader: mdReader, attribute: custAttr, isReturn: true))
                                     .Select(selector: (IAttributor attributor) => attributor.Parse(reader: mdReader, resolver: this.typeResolver, attribute: custAttr, target: "Return"));
 
@@ -286,7 +307,7 @@ namespace DNNE.Assembly
                         else
                         {
                             argumentAttributes.AddRange(
-                                collection: attributors
+                                collection: ATTRIBUTORS
                                     .Where(predicate: (IAttributor attributor) => attributor.IsApplicable(reader: mdReader, attribute: custAttr))
                                     .Select(selector: (IAttributor attributor) => attributor.Parse(reader: mdReader, resolver: this.typeResolver, attribute: custAttr, target: "Argument"))
                             );
