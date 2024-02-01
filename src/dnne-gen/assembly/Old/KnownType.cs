@@ -17,20 +17,22 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using System.Collections.Immutable;
-using System.Runtime.Serialization;
-using System.Xml.Serialization;
-
-namespace DNNE.Assembly
+namespace DNNE.Assembly.Old
 {
-    [DataContract]
-    public struct ExportedType
+    public enum KnownType
     {
-        [DataMember]
-        public string Name { get; init; }
-        [DataMember]
-        public string FullName { get; init; }
-        [DataMember]
-        public ImmutableList<ExportedMethod> ExportedMethods { get; init; }
+        Unknown,
+        I4,
+        CallingConvention,
+        CallConvCdecl,
+        CallConvStdcall,
+        CallConvThiscall,
+        CallConvFastcall,
+        String,
+        SystemTypeArray,
+        SystemType,
+        Type,
+        Class,
+        ValueType
     }
 }

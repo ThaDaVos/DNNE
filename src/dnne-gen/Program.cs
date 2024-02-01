@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using DNNE.Assembly;
+using DNNE.Assembly.Old;
 using DNNE.Exceptions;
 using DNNE.Generators;
 
@@ -84,7 +85,9 @@ namespace DNNE
 
                 Console.WriteLine($"Processing assembly from `{arguments.AssemblyPath}`");
 
-                AssemblyInformation assemblyInformation = Read(arguments.AssemblyPath, arguments.XmlDocFile);
+                Parser parser = new Parser(arguments.AssemblyPath, arguments.XmlDocFile);
+
+                AssemblyInformation assemblyInformation = parser.Parse();
 
                 ExecuteGenerators(
                     arguments.OutputPath,

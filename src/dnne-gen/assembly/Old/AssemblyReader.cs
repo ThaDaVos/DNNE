@@ -16,12 +16,12 @@ using DNNE.Assembly.Attributors;
 using DNNE.Exceptions;
 using DNNE.Languages.C99;
 
-namespace DNNE.Assembly
+namespace DNNE.Assembly.Old
 {
     internal class AssemblyReader : IDisposable
     {
         internal bool isDisposed = false;
-        internal readonly ICustomAttributeTypeProvider<KnownType> typeResolver = new TypeResolver();
+        internal readonly ICustomAttributeTypeProvider<Old.KnownType> typeResolver = new TypeResolver();
         internal readonly string assemblyPath;
         internal readonly PEReader peReader;
         internal readonly MetadataReader mdReader;
@@ -98,8 +98,8 @@ namespace DNNE.Assembly
 
         public AssemblyInformation Read()
         {
-            List<string> additionalCodeStatements = new List<string>();
-            List<ExportedMethod> exportedMethods = new List<ExportedMethod>();
+            List<string> additionalCodeStatements = new ();
+            List<Assembly.Old.ExportedMethod> exportedMethods = new ();
             foreach (MethodDefinitionHandle methodDefHandle in this.mdReader.MethodDefinitions)
             {
                 MethodDefinition methodDef = this.mdReader.GetMethodDefinition(handle: methodDefHandle);
@@ -344,7 +344,7 @@ namespace DNNE.Assembly
 
                 string xmlDoc = FindXmlDoc(fullMethodName: enclosingTypeName.Replace(oldChar: '+', newChar: '.') + Type.Delimiter + managedMethodName, argumentTypes: argumentTypes);
 
-                exportedMethods.Add(item: new ExportedMethod()
+                exportedMethods.Add(item: new Assembly.Old.ExportedMethod()
                 {
                     Type = exportAttrType,
                     EnclosingTypeName = enclosingTypeName,
@@ -386,9 +386,9 @@ namespace DNNE.Assembly
                 Name = assemblyName,
                 Path = assemblyPath,
                 ExportedTypes = exportedMethods
-                    .GroupBy(keySelector: (ExportedMethod exportedMethod) => exportedMethod.EnclosingTypeName)
+                    .GroupBy(keySelector: (Assembly.Old.ExportedMethod exportedMethod) => exportedMethod.EnclosingTypeName)
                     .Select(
-                        selector: (IGrouping<string, ExportedMethod> grouping) => new ExportedType()
+                        selector: (IGrouping<string, Assembly.Old.ExportedMethod> grouping) => new ExportedType()
                         {
                             Name = grouping.Key.Split(separator: '.').Last(),
                             FullName = grouping.Key,

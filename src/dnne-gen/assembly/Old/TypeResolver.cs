@@ -20,9 +20,8 @@
 using System;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
-using Microsoft.Win32;
 
-namespace DNNE.Assembly
+namespace DNNE.Assembly.Old
 {
     public class TypeResolver : ICustomAttributeTypeProvider<KnownType>
     {

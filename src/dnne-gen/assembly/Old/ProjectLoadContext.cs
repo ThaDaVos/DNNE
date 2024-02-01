@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using System.Runtime.Loader;
 
-namespace DNNE.Assembly;
+namespace DNNE.Assembly.Old;
 
 internal class ProjectLoadContext : AssemblyLoadContext
 {

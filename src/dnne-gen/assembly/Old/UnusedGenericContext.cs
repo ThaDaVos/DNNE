@@ -17,18 +17,7 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-using System;
-using DNNE.Assembly.Old;
-using DNNE.Generators;
-
-namespace DNNE
+namespace DNNE.Assembly.Old
 {
-    internal partial class Program
-    {
-        internal struct GeneratorMapping
-        {
-            internal Func<AssemblyInformation, IGenerator> Factory { get; init; }
-            internal bool NeedsClassSupport { get; init; }
-        }
-    }
+    public class UnusedGenericContext { }
 }

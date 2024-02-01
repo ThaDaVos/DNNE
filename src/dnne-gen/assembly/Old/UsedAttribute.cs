@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.Serialization;
 
-namespace DNNE.Assembly
+namespace DNNE.Assembly.Old
 {
     [DataContract]
     public struct UsedAttribute

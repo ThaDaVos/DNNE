@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Text;
-using DNNE.Assembly;
+using DNNE.Assembly.Old;
 using DNNE.Languages.Clarion;
 
 namespace DNNE.Generators

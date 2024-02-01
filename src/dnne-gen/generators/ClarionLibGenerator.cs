@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using DNNE.Assembly;
+using DNNE.Assembly.Old;
 using DNNE.Language.Clarion;
 
 namespace DNNE.Generators

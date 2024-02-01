@@ -1,7 +1,7 @@
 using System.IO;
 using System.Runtime.Serialization;
 using System.Xml;
-using DNNE.Assembly;
+using DNNE.Assembly.Old;
 
 namespace DNNE.Generators
 {

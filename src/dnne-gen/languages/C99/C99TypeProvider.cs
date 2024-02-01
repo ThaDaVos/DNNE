@@ -25,7 +25,7 @@ using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using DNNE.Assembly;
+using DNNE.Assembly.Old;
 using DNNE.Exceptions;
 
 namespace DNNE.Languages.C99

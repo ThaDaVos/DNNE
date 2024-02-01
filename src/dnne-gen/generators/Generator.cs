@@ -19,7 +19,7 @@
 
 using System.IO;
 using System.Linq;
-using DNNE.Assembly;
+using DNNE.Assembly.Old;
 using DNNE.Exceptions;
 
 namespace DNNE.Generators

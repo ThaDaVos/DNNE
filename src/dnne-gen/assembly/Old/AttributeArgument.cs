@@ -1,6 +1,6 @@
 using System.Runtime.Serialization;
 
-namespace DNNE.Assembly;
+namespace DNNE.Assembly.Old;
 
 [DataContract]
 public struct AttributeArgument

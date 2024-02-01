@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml;
 using System.Xml.Schema;
-using DNNE.Assembly;
+using DNNE.Assembly.Old;
 
 namespace DNNE.Generators
 {

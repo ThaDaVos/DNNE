@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection.Metadata;
+using DNNE.Assembly.Old;
 using DNNE.Languages.C99;
 
 namespace DNNE.Assembly.Attributors
@@ -20,7 +21,7 @@ namespace DNNE.Assembly.Attributors
                 && reader.StringComparer.Equals(namespaceMaybe.Value, "DNNE")
                 && reader.StringComparer.Equals(nameMaybe.Value, this.GetAttributeName());
         }
-        public virtual UsedAttribute Parse(MetadataReader reader, ICustomAttributeTypeProvider<KnownType> resolver, CustomAttribute attribute, string target)
+        public virtual UsedAttribute Parse(MetadataReader reader, ICustomAttributeTypeProvider<Old.KnownType> resolver, CustomAttribute attribute, string target)
         {
             var (namespaceMaybe, nameMaybe) = ParseCustomAttribute(reader, attribute);
 
@@ -39,16 +40,16 @@ namespace DNNE.Assembly.Attributors
         };
         }
 
-        private Dictionary<string, AttributeArgument> GetAttributeArgs(ICustomAttributeTypeProvider<KnownType> typeResolver, CustomAttribute attribute, MetadataReader reader)
+        private Dictionary<string, AttributeArgument> GetAttributeArgs(ICustomAttributeTypeProvider<Old.KnownType> typeResolver, CustomAttribute attribute, MetadataReader reader)
         {
             string[] constructorArgumentNames = GetArgumentNamesFromCustomAttribute(reader, attribute);
 
             var arguments = new Dictionary<string, AttributeArgument>();
 
-            CustomAttributeValue<KnownType> data = attribute.DecodeValue(typeResolver);
+            CustomAttributeValue<Old.KnownType> data = attribute.DecodeValue(typeResolver);
 
             int count = 0;
-            foreach (CustomAttributeTypedArgument<KnownType> item in data.FixedArguments)
+            foreach (CustomAttributeTypedArgument<Old.KnownType> item in data.FixedArguments)
             {
                 arguments.Add(constructorArgumentNames[count], new AttributeArgument() {
                     Type = item.Type,
@@ -58,7 +59,7 @@ namespace DNNE.Assembly.Attributors
                 count++;
             }
 
-            foreach (CustomAttributeNamedArgument<KnownType> item in data.NamedArguments)
+            foreach (CustomAttributeNamedArgument<Old.KnownType> item in data.NamedArguments)
             {
                 arguments.Add(item.Name, new AttributeArgument()
                 {

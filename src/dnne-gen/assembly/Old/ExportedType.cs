@@ -17,7 +17,20 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 // SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-namespace DNNE.Assembly
+using System.Collections.Immutable;
+using System.Runtime.Serialization;
+using System.Xml.Serialization;
+
+namespace DNNE.Assembly.Old
 {
-    public class UnusedGenericContext { }
+    [DataContract]
+    public struct ExportedType
+    {
+        [DataMember]
+        public string Name { get; init; }
+        [DataMember]
+        public string FullName { get; init; }
+        [DataMember]
+        public ImmutableList<Old.ExportedMethod> ExportedMethods { get; init; }
+    }
 }

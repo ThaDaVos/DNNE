@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
-using DNNE.Assembly;
+using DNNE.Assembly.Old;
 using DNNE.Languages.Clarion;
 
 namespace DNNE.Generators
@@ -42,7 +42,7 @@ instance LONG"
 
                 var wrapperBuilder = new StringBuilder();
 
-                foreach (ExportedMethod export in enclosingType.ExportedMethods.OrderBy(ex => ex.MethodName))
+                foreach (Assembly.Old.ExportedMethod export in enclosingType.ExportedMethods.OrderBy(ex => ex.MethodName))
                 {
                     var safeTypeName = export.EnclosingTypeName.Replace("_", "").Replace(".", "_");
 
