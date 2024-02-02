@@ -58,7 +58,7 @@ namespace DNNE.Generators
             return outputFile;
         }
 
-        protected virtual string ResolveClassName(ExportedType enclosingType)
+        protected virtual string ResolveClassName(Assembly.Old.ExportedType enclosingType)
         {
             return enclosingType.Name.Split('.').Last();
         }

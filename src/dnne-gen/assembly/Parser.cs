@@ -42,42 +42,35 @@ namespace DNNE.Assembly
 
             Console.WriteLine($"Assembly: {assemblyName}");
 
-            TypeDefinitionHandleCollection typeDefinitions = metadataReader.TypeDefinitions;
+            IEnumerable<ExportedType>? types = metadataReader.GetExportedTypes();
 
-            foreach (TypeDefinitionHandle typeDefinitionHandle in typeDefinitions)
+            foreach (ExportedType type in types)
             {
-                TypeDefinition typeDefinition = metadataReader.GetTypeDefinition(typeDefinitionHandle);
+                Console.WriteLine($"Type: {type.Name}");
 
-                string typeName = metadataReader.GetString(typeDefinition.Name);
-
-                Console.WriteLine($"Type: {typeName}");
-
-                IEnumerable<ExportedMethod>? exportedMethods = typeDefinition.GetExportedMethods(metadataReader);
-                foreach (ExportedMethod method in exportedMethods)
+                foreach (ExportedMethod method in type.Methods)
                 {
                     Console.WriteLine($"\tMethod[{method.GetReturnType<string, Old.UnusedGenericContext>(new PseudoTypeProvider())}]: {method.Name}");
-                    ImmutableArray<UsedCustomAttribute<string>> 
-                    attributes = method.GetCustomAttributes(new PseudoTypeProvider());
-                    foreach (UsedCustomAttribute<string> attribute in attributes)
+
+                    foreach (UsedAttribute<string> attribute in method.GetCustomAttributes(new PseudoTypeProvider()))
                     {
                         Console.WriteLine($"\t\tAttribute[{attribute.Namespace}]: {attribute.Name}");
                     }
                 }
 
-                IEnumerable<ExportedProperty>? exportedProperties = typeDefinition.GetExportedProperties(metadataReader);
-                foreach (ExportedProperty property in exportedProperties)
+                foreach (ExportedProperty property in type.Properties)
                 {
                     Console.WriteLine($"\tProperty[{property.Type}|{property.KnownType}]: {property.Name} = {property.Value ?? "NULL"}");
                 }
 
-                IEnumerable<ExportedField>? exportedFields = typeDefinition.GetExportedFields(metadataReader);
-                foreach (ExportedField field in exportedFields)
+                foreach (ExportedField field in type.Fields)
                 {
                     Console.WriteLine($"\tField[{field.Type}|{field.KnownType}]: {field.Name} = {field.Value ?? "NULL"}");
                 }
             }
 
-            return new Old.AssemblyInformation() {
+            return new Old.AssemblyInformation()
+            {
                 ExportedTypes = new List<Assembly.Old.ExportedType>().ToImmutableList(),
             };
         }

@@ -17,9 +17,9 @@ internal abstract class ExportedEntity<TDefinition> where TDefinition : struct
     }
     protected abstract string GetName();
     protected abstract CustomAttributeHandleCollection GetCustomAttributeHandles();
-    internal ImmutableArray<UsedCustomAttribute<TType>> GetCustomAttributes<TType>(ICustomAttributeTypeProvider<TType> customAttributeTypeProvider) => GetCustomAttributeHandles()
+    internal ImmutableArray<UsedAttribute<TType>> GetCustomAttributes<TType>(ICustomAttributeTypeProvider<TType> customAttributeTypeProvider) => GetCustomAttributeHandles()
             .Select(
-                handle => new UsedCustomAttribute<TType>(
+                handle => new UsedAttribute<TType>(
                     metadataReader,
                     metadataReader.GetCustomAttribute(handle),
                     customAttributeTypeProvider

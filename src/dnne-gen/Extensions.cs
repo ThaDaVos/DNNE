@@ -23,6 +23,25 @@ internal static class Extensions
         return source.Any() ? source.Aggregate(func) : default;
     }
 
+    internal static ExportedType ToExportedEntity(this MetadataReader metadataReader, TypeDefinitionHandle? definitionHandle)
+    {
+        if (metadataReader == null)
+        {
+            throw new ArgumentNullException(nameof(metadataReader));
+        }
+
+        if (definitionHandle == null)
+        {
+            throw new ArgumentNullException(nameof(definitionHandle));
+        }
+
+        return new(metadataReader, metadataReader.GetTypeDefinition(definitionHandle.Value));
+    }
+
+    internal static IEnumerable<ExportedType> GetExportedTypes(this MetadataReader metadataReader) => metadataReader
+            .TypeDefinitions
+            .Select(definitionHandle => metadataReader.ToExportedEntity(definitionHandle));
+
     internal static ExportedField ToExportedEntity(this MetadataReader metadataReader, FieldDefinitionHandle? definitionHandle)
     {
         if (metadataReader == null)
@@ -38,12 +57,9 @@ internal static class Extensions
         return new(metadataReader, metadataReader.GetFieldDefinition(definitionHandle.Value));
     }
 
-    internal static IEnumerable<ExportedField> GetExportedFields(this TypeDefinition typeDefinition, MetadataReader metadataReader)
-    {
-        return typeDefinition
+    internal static IEnumerable<ExportedField> GetExportedFields(this TypeDefinition typeDefinition, MetadataReader metadataReader) => typeDefinition
             .GetFields()
             .Select(definitionHandle => metadataReader.ToExportedEntity(definitionHandle));
-    }
 
     internal static ExportedMethod ToExportedEntity(this MetadataReader metadataReader, MethodDefinitionHandle? definitionHandle)
     {
@@ -82,12 +98,9 @@ internal static class Extensions
         return new(metadataReader, metadataReader.GetPropertyDefinition(definitionHandle.Value));
     }
 
-    internal static IEnumerable<ExportedProperty> GetExportedProperties(this TypeDefinition typeDefinition, MetadataReader metadataReader)
-    {
-        return typeDefinition
+    internal static IEnumerable<ExportedProperty> GetExportedProperties(this TypeDefinition typeDefinition, MetadataReader metadataReader) => typeDefinition
             .GetProperties()
             .Select(definitionHandle => metadataReader.ToExportedEntity(definitionHandle));
-    }
 
     internal static bool ReadBoolean(this BlobHandle blob, MetadataReader metadataReader)
     {
