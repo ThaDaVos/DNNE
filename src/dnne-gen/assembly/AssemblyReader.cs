@@ -188,24 +188,6 @@ namespace DNNE.Assembly
                                         {
                                             Debug.Assert(condition: cct.Type == KnownType.SystemType);
 
-                                            callConv = (KnownType)cct.Value switch
-                                            {
-                                                KnownType.Unknown => throw new NotImplementedException(),
-                                                KnownType.I4 => throw new NotImplementedException(),
-                                                KnownType.CallingConvention => throw new NotImplementedException(),
-                                                KnownType.CallConvCdecl => throw new NotImplementedException(),
-                                                KnownType.CallConvStdcall => throw new NotImplementedException(),
-                                                KnownType.CallConvThiscall => throw new NotImplementedException(),
-                                                KnownType.CallConvFastcall => throw new NotImplementedException(),
-                                                KnownType.String => throw new NotImplementedException(),
-                                                KnownType.SystemTypeArray => throw new NotImplementedException(),
-                                                KnownType.SystemType => throw new NotImplementedException(),
-                                                KnownType.Type => throw new NotImplementedException(),
-                                                KnownType.Class => throw new NotImplementedException(),
-                                                KnownType.ValueType => throw new NotImplementedException(),
-                                                _ => throw new NotSupportedException($"Unknown KnownType: {cct.Value}")
-                                            };
-
                                             switch ((KnownType)cct.Value)
                                             {
                                                 case KnownType.CallConvCdecl:
