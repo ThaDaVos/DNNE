@@ -50,7 +50,7 @@ namespace DNNE.Generators
             exportQ.Add(new ExportQ
             {
                 Module = $"{this.assemblyInformation.Name}NE.dll",
-                Symbol = $"_try_preload_runtime@0",
+                Symbol = $"_{this.assemblyInformation.Name}_try_preload_runtime@0",
                 Ordinal = ordinal,
                 OrgOrder = ordinal,
                 TreeLevel = 2,
@@ -61,7 +61,7 @@ namespace DNNE.Generators
             exportQ.Add(new ExportQ
             {
                 Module = $"{this.assemblyInformation.Name}NE.dll",
-                Symbol = $"_preload_runtime@0",
+                Symbol = $"_{this.assemblyInformation.Name}_preload_runtime@0",
                 Ordinal = ordinal,
                 OrgOrder = ordinal,
                 TreeLevel = 2,
