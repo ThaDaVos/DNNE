@@ -51,19 +51,6 @@ $@"//
 //
 
 //
-// Declare wrapped functions
-//
-DNNE_EXTERN_C DNNE_API void DNNE_CALLTYPE {this.assemblyInformation.Name}_preload_runtime(void)
-{{
-    preload_runtime();
-}}
-
-DNNE_EXTERN_C DNNE_API int DNNE_CALLTYPE {this.assemblyInformation.Name}_try_preload_runtime(void)
-{{
-    return try_preload_runtime();
-}}
-
-//
 // Declare exported functions
 //
 #ifndef {generatedHeaderDefine}
@@ -78,6 +65,19 @@ DNNE_EXTERN_C DNNE_API int DNNE_CALLTYPE {this.assemblyInformation.Name}_try_pre
     // dnne.h will be next to this file.
     #include ""dnne.h""
 #endif // !{compileAsSourceDefine}
+
+//
+// Declare wrapped functions
+//
+DNNE_EXTERN_C DNNE_API void DNNE_CALLTYPE {this.assemblyInformation.Name}_preload_runtime(void)
+{{
+    preload_runtime();
+}}
+
+DNNE_EXTERN_C DNNE_API int DNNE_CALLTYPE {this.assemblyInformation.Name}_try_preload_runtime(void)
+{{
+    return try_preload_runtime();
+}}
 ");
 
             // Emit additional code statements

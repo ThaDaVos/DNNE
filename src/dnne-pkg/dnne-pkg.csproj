@@ -95,7 +95,7 @@
     <Copy SourceFiles="@(DnneGenFiles)" DestinationFolder="$(ToolsDest)" />
     <Copy SourceFiles="@(DnneSourceFiles)" DestinationFolder="$(AnalyzersDest)" />
     <Copy SourceFiles="@(PlatformFiles)" DestinationFolder="$(PlatformDest)" />
-    <Copy SourceFiles="@(CSAnalyzers)" DestinationFolder="$(CSAnalyzersDest)" />
+    <!-- <Copy SourceFiles="@(CSAnalyzers)" DestinationFolder="$(CSAnalyzersDest)" /> -->
 
     <!-- Define the NuPkg content -->
     <ItemGroup>

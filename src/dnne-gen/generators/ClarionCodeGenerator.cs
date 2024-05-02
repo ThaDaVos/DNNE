@@ -33,7 +33,7 @@ namespace DNNE.Generators
             var moduleBuilder = new StringBuilder();
             var wrapperBuilder = new StringBuilder();
 
-            moduleBuilder.AppendLine($@"        {this.assemblyInformation.SafeName}_tryLoadRuntime(),SHORT,c,raw,dll(1),name('_try_preload_runtime@0')");
+            moduleBuilder.AppendLine($@"        {this.assemblyInformation.SafeName}_tryLoadRuntime(),SHORT,c,raw,dll(1),name('_{this.assemblyInformation.Name}_try_preload_runtime@0')");
 
             foreach (var enclosingType in this.assemblyInformation.ExportedTypes)
             {
