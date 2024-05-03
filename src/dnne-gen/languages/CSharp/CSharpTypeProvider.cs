@@ -3,9 +3,9 @@ using System.Collections.Immutable;
 using System.Reflection.Metadata;
 using DNNE.Assembly;
 
-namespace DNNE.Languages.Pseudo;
+namespace DNNE.Languages.CSharp;
 
-public class PseudoTypeProvider : AbstractSignatureTypeProvider<Assembly.Old.UnusedGenericContext>
+public class CSharpTypeProvider : AbstractSignatureTypeProvider<GenericParametersContext>
 {
     public override string GetArrayType(KnownType knownType, string elementType, ArrayShape shape)
     {
@@ -24,9 +24,19 @@ public class PseudoTypeProvider : AbstractSignatureTypeProvider<Assembly.Old.Unu
 
     public override string GetGenericInstantiation(KnownType knownGenericType, string genericType, ImmutableArray<KnownType> knownTypeArguments, ImmutableArray<string> typeArguments)
     {
-        var knownArgs = string.Join(", ", System.Linq.ImmutableArrayExtensions.Select(knownTypeArguments, x => Enum.GetName(x)));
-        var args = string.Join(", ", typeArguments);
+        string? knownArgs = string.Join(", ", System.Linq.ImmutableArrayExtensions.Select(knownTypeArguments, x => Enum.GetName(x)));
+        string? args = string.Join(", ", typeArguments);
         return Enum.GetName(knownGenericType) ?? "UNKNOWN";
+    }
+
+    public override string GetGenericMethodParameter(Assembly.GenericParameter parameter, GenericParametersContext? genericContext, int index)
+    {
+        return $"#{parameter.Name}";
+    }
+
+    public override string GetGenericTypeParameter(Assembly.GenericParameter parameter, GenericParametersContext? genericContext, int index)
+    {
+        throw new NotImplementedException();
     }
 
     public override string GetModifiedType(KnownType knownModifier, string modifier, KnownType knownUnmodifiedType, string unmodifiedType, bool isRequired)
@@ -74,7 +84,7 @@ public class PseudoTypeProvider : AbstractSignatureTypeProvider<Assembly.Old.Unu
         return $"{typeName} | {assemblySimpleName} | {Enum.GetName(knownType) ?? "UNKNOWN"}";
     }
 
-    public override string GetTypeFromSpecification(MetadataReader reader, Assembly.Old.UnusedGenericContext? genericContext, TypeSpecificationHandle handle, KnownType knownRawTypeKind, byte rawTypeKind)
+    public override string GetTypeFromSpecification(MetadataReader reader, GenericParametersContext? genericContext, TypeSpecificationHandle handle, KnownType knownRawTypeKind, byte rawTypeKind)
     {
         return Enum.GetName(knownRawTypeKind) ?? "UNKNOWN";
     }

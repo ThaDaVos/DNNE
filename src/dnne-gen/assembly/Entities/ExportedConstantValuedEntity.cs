@@ -1,20 +1,14 @@
 ﻿using System;
 using System.Reflection.Metadata;
+using DNNE.Assembly.Entities.Interfaces;
 
-namespace DNNE.Assembly;
+namespace DNNE.Assembly.Entities;
 
-internal abstract class ExportedValuedEntity<TDefinition> : ExportedEntity<TDefinition> where TDefinition : struct
+internal abstract class ExportedConstantValuedEntity<TEntity> : ExportedValuedEntity<TEntity>, IExportedConstantValuedEntity where TEntity : struct
 {
     private Constant? constant;
-    private dynamic? value;
-    internal dynamic? Value
-    {
-        get => value ??= GetValue();
-    }
-    internal Type Type => Value?.GetType() ?? typeof(object);
-    internal KnownType KnownType => GetKnownType() ?? KnownType.UNKNOWN;
-    internal bool IsNil => Value == null;
-    protected ExportedValuedEntity(MetadataReader metadataReader, TDefinition definition) : base(metadataReader, definition)
+    public KnownType KnownType => GetKnownType() ?? KnownType.UNKNOWN;
+    protected ExportedConstantValuedEntity(MetadataReader metadataReader, TEntity entity) : base(metadataReader, entity)
     {
     }
     protected abstract ConstantHandle GetConstantHandle();
@@ -29,7 +23,8 @@ internal abstract class ExportedValuedEntity<TDefinition> : ExportedEntity<TDefi
 
         return metadataReader.GetConstant(constantHandle);
     }
-    private KnownType? GetKnownType()
+
+    protected KnownType? GetKnownType()
     {
         if (constant.HasValue == false)
         {
@@ -38,7 +33,8 @@ internal abstract class ExportedValuedEntity<TDefinition> : ExportedEntity<TDefi
 
         return constant.HasValue ? constant.Value.TypeCode.ToKnownType() : KnownType.NULL;
     }
-    private dynamic? GetValue()
+
+    protected override dynamic? GetValue()
     {
         if (constant.HasValue == false)
         {

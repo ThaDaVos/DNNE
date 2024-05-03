@@ -6,6 +6,7 @@ using System.Reflection.Metadata;
 namespace DNNE.Assembly;
 
 public abstract class AbstractSignatureTypeProvider<TGenericContext> : ISignatureTypeProvider<string, TGenericContext?>, ICustomAttributeTypeProvider<string>
+    where TGenericContext : GenericParametersContext
 {
     #region Shared functions for Handling types
     private KnownType GetKnownTypeFromString(string elementType)
@@ -18,6 +19,26 @@ public abstract class AbstractSignatureTypeProvider<TGenericContext> : ISignatur
         if (elementType.Contains("NOT_IMPLEMENTED"))
         {
             return KnownType.UNKNOWN;
+        }
+
+        if (elementType.StartsWith("#"))
+        {
+            return KnownType.GENERICINST;
+        }
+
+        if (elementType.Contains("GENERIC_TYPE_PARAMETER"))
+        {
+            return KnownType.GENERICINST;
+        }
+
+        if (elementType.Contains("GENERIC_METHOD_PARAMETER"))
+        {
+            return KnownType.GENERICINST;
+        }
+
+        if (elementType.Contains("SYSTEM"))
+        {
+            return KnownType.SYSTEM;
         }
 
         throw new NotImplementedException();
@@ -63,13 +84,29 @@ public abstract class AbstractSignatureTypeProvider<TGenericContext> : ISignatur
 
     public string GetGenericMethodParameter(TGenericContext? genericContext, int index)
     {
-        return "NOT_IMPLEMENTED";
+        GenericParameter? parameter = genericContext?.GetGenericParameterByIndex(index);
+
+        if (parameter.HasValue == false)
+        {
+            return $"#T{index}";
+        }
+
+        return GetGenericMethodParameter(parameter.Value, genericContext, index);
     }
+    public abstract string GetGenericMethodParameter(GenericParameter parameter, TGenericContext? genericContext, int index);
 
     public string GetGenericTypeParameter(TGenericContext? genericContext, int index)
     {
-        return "NOT_IMPLEMENTED";
+        GenericParameter? parameter = genericContext?.GetGenericParameterByIndex(index);
+
+        if (parameter.HasValue == false)
+        {
+            return $"#T{index}";
+        }
+
+        return GetGenericTypeParameter(parameter.Value, genericContext, index);
     }
+    public abstract string GetGenericTypeParameter(GenericParameter parameter, TGenericContext? genericContext, int index);
 
     public string GetModifiedType(string modifier, string unmodifiedType, bool isRequired) => GetModifiedType(
             GetKnownTypeFromString(modifier),
