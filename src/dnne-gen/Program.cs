@@ -22,8 +22,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using DNNE.Assembly;
-using DNNE.Assembly.Entities.Interfaces;
-using DNNE.Assembly.Old;
 using DNNE.Exceptions;
 using DNNE.Generators;
 
@@ -82,21 +80,26 @@ namespace DNNE
                     args = new[] { "-?" };
                 }
 
-                ParsedArguments arguments = Parse(args);
+                ParsedArguments arguments = ParseCommandLineArguments(args);
 
                 Console.WriteLine($"Processing assembly from `{arguments.AssemblyPath}`");
 
+                if (File.Exists(arguments.AssemblyPath.Replace(".dll", ".xml")))
+                {
+                    arguments.XmlDocFile = arguments.AssemblyPath.Replace(".dll", ".xml");
+                }
+
                 Parser parser = new Parser(arguments.AssemblyPath, arguments.XmlDocFile);
 
-                IExportedAssembly assembly = parser.Parse();
+                AssemblyInformation assemblyInformation = parser.Parse();
 
                 ExecuteGenerators(
                     arguments.OutputPath,
                     arguments.UseClasses,
                     arguments.AdditionalGenerators,
-                    new AssemblyInformation()
+                    new Assembly.Old.AssemblyInformation()
                     {
-                        Name = assembly.Name,
+                        Name = assemblyInformation.Assembly.Name,
                         ExportedTypes = [],
                     }
                 );
@@ -111,7 +114,7 @@ namespace DNNE
             }
         }
 
-        private static ParsedArguments Parse(string[] args)
+        private static ParsedArguments ParseCommandLineArguments(string[] args)
         {
             var parsed = new ParsedArguments()
             {
@@ -212,14 +215,7 @@ namespace DNNE
             return parsed;
         }
 
-        private static AssemblyInformation Read(string assemblyPath, string xmlDocFile)
-        {
-            using AssemblyReader reader = new AssemblyReader(assemblyPath, xmlDocFile);
-
-            return reader.Read();
-        }
-
-        private static void ExecuteGenerators(string outputPath, bool useClasses, string additionalGenerators, AssemblyInformation assemblyInformation)
+        private static void ExecuteGenerators(string outputPath, bool useClasses, string additionalGenerators, Assembly.Old.AssemblyInformation assemblyInformation)
         {
             IEnumerable<GeneratorMapping> additionalGeneratorMappings = ExtractAdditionalGenerators(additionalGenerators);
 
@@ -250,7 +246,7 @@ namespace DNNE
             return neededGeneratorMappings;
         }
 
-        private static void DoC99Generation(string outputPath, bool useClasses, AssemblyInformation assemblyInformation)
+        private static void DoC99Generation(string outputPath, bool useClasses, Assembly.Old.AssemblyInformation assemblyInformation)
         {
             IGenerator c99Generator = useClasses
                 ? new C99ClassedGenerator(assemblyInformation)

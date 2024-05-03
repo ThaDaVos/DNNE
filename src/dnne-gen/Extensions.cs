@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Reflection.Metadata;
+using System.Text.RegularExpressions;
 
 namespace DNNE;
 
@@ -16,9 +17,26 @@ internal static class Extensions
 
         if (func == null)
         {
-            throw new ArgumentNullException(nameof(func));
+            throw new ArgumentNullException(paramName: nameof(func));
         }
 
         return source.Any() ? source.Aggregate(func) : default;
+    }
+
+    internal static bool IsMatched(this Regex regex, string input, out Match? match)
+    {
+        if (regex == null)
+        {
+            throw new ArgumentNullException(nameof(regex));
+        }
+
+        if (input == null)
+        {
+            throw new ArgumentNullException(nameof(input));
+        }
+
+        match = regex.Match(input);
+        
+        return match.Success;
     }
 }
