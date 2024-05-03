@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
@@ -30,7 +28,7 @@ namespace DNNE.Assembly
             XmlDocFilePath = xmlDocFilePath;
         }
 
-        public Old.AssemblyInformation Parse()
+        public IExportedAssembly Parse()
         {
             using FileStream stream = File.OpenRead(AssemblyPath);
             using PEReader peReader = new PEReader(stream);
@@ -39,13 +37,21 @@ namespace DNNE.Assembly
 
             AssemblyDefinition assemblyDefinition = metadataReader.GetAssemblyDefinition();
 
-            string assemblyName = metadataReader.GetString(assemblyDefinition.Name);
+            IExportedAssembly assembly = new ExportedAssembly(metadataReader, assemblyDefinition, AssemblyPath);
 
-            Console.WriteLine($"Assembly: {assemblyName}");
+#if DEBUG
+            WriteOutAssembly(assembly);
+#endif
 
-            IEnumerable<IExportedType>? types = metadataReader.GetExportedTypes();
+            return assembly;
+        }
 
-            foreach (IExportedType type in types)
+#if DEBUG
+        public void WriteOutAssembly(IExportedAssembly assembly)
+        {
+            Console.WriteLine($"Assembly: {assembly.Name} ({assembly.SafeName}) [{assembly.Path}]");
+
+            foreach (IExportedType type in assembly.ExportedTypes)
             {
                 Console.WriteLine($"Type: {type.Name}");
 
@@ -69,11 +75,7 @@ namespace DNNE.Assembly
                     Console.WriteLine($"\tField[{field.Type}|{field.KnownType}]: {field.Name} = {field.Value ?? "NULL"}");
                 }
             }
-
-            return new Old.AssemblyInformation()
-            {
-                ExportedTypes = new List<Assembly.Old.ExportedType>().ToImmutableList(),
-            };
         }
+#endif
     }
 }

@@ -72,12 +72,12 @@ internal class ExportedAttribute : ExportedEntity<CustomAttributeHandle>, IExpor
 
     public (IEnumerable<FixedArgumentOfExportedAttribute> FixedArguments, IEnumerable<NamedArgumentOfExportedAttribute> NamedArguments) GetArguments(AbstractSignatureTypeProvider<GenericParametersContext>? provider = null)
     {
-        string[] constructorArgumentNames = GetArgumentNamesFromCustomAttribute();
+        provider ??= new CSharpTypeProvider();
 
-        Dictionary<string, UsedAttributeArgument<string>>? arguments = new();
+        string[] constructorArgumentNames = GetArgumentNamesFromCustomAttribute(provider);
 
         // Use different TypeProvider for decoding the attribute value
-        CustomAttributeValue<string> data = CustomAttribute.DecodeValue(provider ?? new CSharpTypeProvider());
+        CustomAttributeValue<string> data = CustomAttribute.DecodeValue(provider);
 
         return (
             data.FixedArguments
@@ -93,30 +93,13 @@ internal class ExportedAttribute : ExportedEntity<CustomAttributeHandle>, IExpor
         );
     }
 
-    string[] GetArgumentNamesFromCustomAttribute() => CustomAttribute.Constructor.Kind switch
+    private string[] GetArgumentNamesFromCustomAttribute(AbstractSignatureTypeProvider<GenericParametersContext> provider)
     {
-        HandleKind.MemberReference => GetArgumentNamesFromCustomAttributeWithConstructorReference(),
-        HandleKind.MethodDefinition => GetArgumentNamesFromCustomAttributeWithConstructorDefinition(),
-        _ => throw new ArgumentOutOfRangeException($"Unknown attribute constructor kind: {Enum.GetName(CustomAttribute.Constructor.Kind)}"),
-    };
+        if (CustomAttribute.Constructor.Kind == HandleKind.MemberReference)
+        {
+            throw new NotImplementedException("MemberReference constructor is not supported.");
+        }
 
-    private string[] GetArgumentNamesFromCustomAttributeWithConstructorReference()
-    {
-        // MemberReference refConstructor = reader.GetMemberReference((MemberReferenceHandle)attribute.Constructor);
-
-        // ParameterHandleCollection parameters = refConstructor.GetParameters();
-        // List<string> names = new(parameters.Count);
-        // foreach (ParameterHandle param in parameters)
-        // {
-        //     names.Add(reader.GetString(reader.GetParameter(param).Name));
-        // }
-
-        // return names.ToArray();
-
-        return [];
-    }
-    private string[] GetArgumentNamesFromCustomAttributeWithConstructorDefinition()
-    {
         MethodDefinition defConstructor = metadataReader.GetMethodDefinition((MethodDefinitionHandle)CustomAttribute.Constructor);
 
         ParameterHandleCollection parameters = defConstructor.GetParameters();

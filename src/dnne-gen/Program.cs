@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using DNNE.Assembly;
+using DNNE.Assembly.Entities.Interfaces;
 using DNNE.Assembly.Old;
 using DNNE.Exceptions;
 using DNNE.Generators;
@@ -87,13 +88,17 @@ namespace DNNE
 
                 Parser parser = new Parser(arguments.AssemblyPath, arguments.XmlDocFile);
 
-                AssemblyInformation assemblyInformation = parser.Parse();
+                IExportedAssembly assembly = parser.Parse();
 
                 ExecuteGenerators(
                     arguments.OutputPath,
                     arguments.UseClasses,
                     arguments.AdditionalGenerators,
-                    assemblyInformation
+                    new AssemblyInformation()
+                    {
+                        Name = assembly.Name,
+                        ExportedTypes = [],
+                    }
                 );
             }
             catch (ParseException pe)
