@@ -70,16 +70,6 @@ namespace DNNE.Assembly
             {
                 Console.WriteLine($"Type: {type.Name}");
 
-                foreach (IExportedMethod method in type.Methods)
-                {
-                    Console.WriteLine($"\tMethod[{method.ReturnType}]: {method.Name}");
-
-                    foreach (IExportedAttribute attribute in method.CustomAttributes)
-                    {
-                        Console.WriteLine($"\t\tAttribute[{attribute.Namespace}]: {attribute.Name}");
-                    }
-                }
-
                 foreach (ExportedProperty property in type.Properties)
                 {
                     Console.WriteLine($"\tProperty[{property.Type}|{property.KnownType}]: {property.Name} = {property.Value ?? "NULL"}");
@@ -89,6 +79,27 @@ namespace DNNE.Assembly
                 {
                     Console.WriteLine($"\tField[{field.Type}|{field.KnownType}]: {field.Name} = {field.Value ?? "NULL"}");
                 }
+
+                foreach (IExportedMethod method in type.Methods)
+                {
+                    Console.WriteLine($"\tMethod[{method.ReturnType}]: {method.Name}");
+
+                    foreach (IExportedAttribute attribute in method.CustomAttributes)
+                    {
+                        Console.WriteLine($"\t\tAttribute[{attribute.Namespace}]: {attribute.Name}");
+                    }
+
+                    foreach (ExportedMethodParameter parameter in method.Parameters)
+                    {
+                        Console.WriteLine($"\t\tParameter[{parameter.Type}]: {parameter.Name} => {parameter.Value ?? "NULL"}");
+
+                        foreach (IExportedAttribute attribute in parameter.CustomAttributes)
+                        {
+                            Console.WriteLine($"\t\t\tAttribute[{attribute.Namespace}]: {attribute.Name}");
+                        }
+                    }
+                }
+
             }
         }
 #endif

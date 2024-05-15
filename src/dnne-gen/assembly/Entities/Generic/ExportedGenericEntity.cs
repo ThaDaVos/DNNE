@@ -1,4 +1,5 @@
 ﻿using System.Reflection.Metadata;
+using DNNE.Assembly.Entities.Interfaces;
 
 namespace DNNE.Assembly.Entities.Generic;
 
@@ -6,7 +7,7 @@ internal abstract class ExportedGenericEntity<TEntity> : ExportedEntity<TEntity>
 {
     protected readonly GenericParametersContext genericParametersContext;
 
-    protected ExportedGenericEntity(MetadataReader metadataReader, TEntity entity) : base(metadataReader, entity)
+    protected ExportedGenericEntity(MetadataReader metadataReader, TEntity entity, IExportedEntity? parent = null) : base(metadataReader, entity, parent)
     {
         this.genericParametersContext = GetGenericParametersContext(metadataReader, entity);
     }

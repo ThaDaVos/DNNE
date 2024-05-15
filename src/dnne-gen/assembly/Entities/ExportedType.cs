@@ -17,7 +17,7 @@ internal class ExportedType : ExportedAttributedEntity<TypeDefinition>, IExporte
 
     public IEnumerable<IExportedType> NestedExportedTypes => nestedExportedTypes ??= GetNestedExportedTypes();
 
-    public ExportedType(MetadataReader metadataReader, TypeDefinition entity) : base(metadataReader, entity)
+    public ExportedType(MetadataReader metadataReader, TypeDefinition entity, IExportedEntity? parent = null) : base(metadataReader, entity, parent)
     {
     }
 
@@ -25,14 +25,14 @@ internal class ExportedType : ExportedAttributedEntity<TypeDefinition>, IExporte
 
     protected override string GetName() => metadataReader.GetString(entity.Name);
 
-    internal IEnumerable<IExportedMethod> GetMethods() => entity.GetExportedMethods(metadataReader);
-    internal IEnumerable<ExportedProperty> GetProperties() => entity.GetExportedProperties(metadataReader);
-    internal IEnumerable<ExportedField> GetFields() => entity.GetExportedFields(metadataReader);
+    internal IEnumerable<IExportedMethod> GetMethods() => entity.GetExportedMethods(metadataReader, this);
+    internal IEnumerable<ExportedProperty> GetProperties() => entity.GetExportedProperties(metadataReader, this);
+    internal IEnumerable<ExportedField> GetFields() => entity.GetExportedFields(metadataReader, this);
     internal IEnumerable<IExportedType> GetNestedExportedTypes()
     {
         foreach (TypeDefinitionHandle nestedTypeHandle in entity.GetNestedTypes())
         {
-            yield return metadataReader.ToExportedEntity(nestedTypeHandle);
+            yield return metadataReader.ToExportedEntity(nestedTypeHandle, this);
         }
 
         yield break;

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection.Metadata;
+﻿using System.Reflection.Metadata;
 using DNNE.Assembly.Entities.Interfaces;
 
 namespace DNNE.Assembly.Entities;
@@ -11,9 +10,9 @@ internal abstract class ExportedValuedEntity<TEntity> : ExportedEntity<TEntity>,
     {
         get => value ??= GetValue();
     }
-    public Type Type => Value?.GetType() ?? typeof(object);
+    public virtual string Type => (Value?.GetType() ?? typeof(object)).ToString();
     public bool IsNil => Value == null;
-    protected ExportedValuedEntity(MetadataReader metadataReader, TEntity entity) : base(metadataReader, entity)
+    protected ExportedValuedEntity(MetadataReader metadataReader, TEntity entity, IExportedEntity? parent = null) : base(metadataReader, entity, parent)
     {
     }
     protected abstract dynamic? GetValue();

@@ -14,6 +14,6 @@ internal class ExportedAssembly : ExportedEntity<AssemblyDefinition>, IExportedA
 
     public string SafeName => Name.Replace("_", "").Replace(".", "_");
     public string Path => _path;
-    public IEnumerable<IExportedType> ExportedTypes => metadataReader.GetExportedTypes();
+    public IEnumerable<IExportedType> ExportedTypes => metadataReader.GetExportedTypes(this);
     protected override string GetName() => metadataReader.GetString(entity.Name);
 }

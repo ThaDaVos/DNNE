@@ -2,5 +2,6 @@
 
 public interface IExportedEntity
 {
+    internal IExportedEntity? Parent { get; }
     internal string Name { get; }
 }

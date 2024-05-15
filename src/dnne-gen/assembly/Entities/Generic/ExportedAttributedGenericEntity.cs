@@ -7,7 +7,7 @@ namespace DNNE.Assembly.Entities.Generic;
 
 internal abstract class ExportedAttributedGenericEntity<TEntity> : ExportedGenericEntity<TEntity>, IExportedAttributedEntity where TEntity : struct
 {
-    protected ExportedAttributedGenericEntity(MetadataReader metadataReader, TEntity entity) : base(metadataReader, entity)
+    protected ExportedAttributedGenericEntity(MetadataReader metadataReader, TEntity entity, IExportedEntity? parent = null) : base(metadataReader, entity, parent)
     {
     }
 
@@ -15,6 +15,6 @@ internal abstract class ExportedAttributedGenericEntity<TEntity> : ExportedGener
     protected abstract CustomAttributeHandleCollection GetCustomAttributeHandles();
     internal IEnumerable<IExportedAttribute> GetCustomAttributes() => GetCustomAttributeHandles()
             .Select(
-                (CustomAttributeHandle handle) => new ExportedAttribute(metadataReader, handle)
+                (CustomAttributeHandle handle) => new ExportedAttribute(metadataReader, handle, this)
             );
 }

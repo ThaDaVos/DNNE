@@ -97,11 +97,7 @@ namespace DNNE
                     arguments.OutputPath,
                     arguments.UseClasses,
                     arguments.AdditionalGenerators,
-                    new Assembly.Old.AssemblyInformation()
-                    {
-                        Name = assemblyInformation.Assembly.Name,
-                        ExportedTypes = [],
-                    }
+                    assemblyInformation
                 );
             }
             catch (ParseException pe)
@@ -215,7 +211,7 @@ namespace DNNE
             return parsed;
         }
 
-        private static void ExecuteGenerators(string outputPath, bool useClasses, string additionalGenerators, Assembly.Old.AssemblyInformation assemblyInformation)
+        private static void ExecuteGenerators(string outputPath, bool useClasses, string additionalGenerators, AssemblyInformation assemblyInformation)
         {
             IEnumerable<GeneratorMapping> additionalGeneratorMappings = ExtractAdditionalGenerators(additionalGenerators);
 
@@ -225,9 +221,7 @@ namespace DNNE
                 assemblyInformation
             );
 
-            IEnumerable<IGenerator> generators = additionalGeneratorMappings.Select((mapping) => mapping.Factory(assemblyInformation));
-
-            DoAdditionalGeneratorsGeneration(outputPath, generators);
+            DoAdditionalGeneratorsGeneration(outputPath, additionalGeneratorMappings, assemblyInformation);
         }
 
         private static IEnumerable<GeneratorMapping> ExtractAdditionalGenerators(string additionalGenerators)
@@ -246,11 +240,13 @@ namespace DNNE
             return neededGeneratorMappings;
         }
 
-        private static void DoC99Generation(string outputPath, bool useClasses, Assembly.Old.AssemblyInformation assemblyInformation)
+        private static void DoC99Generation(string outputPath, bool useClasses, AssemblyInformation assemblyInformation)
         {
+            var temp = new Assembly.Old.AssemblyInformation();
+
             IGenerator c99Generator = useClasses
-                ? new C99ClassedGenerator(assemblyInformation)
-                : new C99Generator(assemblyInformation);
+                ? new C99ClassedGenerator(temp)
+                : new C99Generator(temp);
 
             if (string.IsNullOrWhiteSpace(value: outputPath))
             {
@@ -266,9 +262,11 @@ namespace DNNE
             }
         }
 
-        private static void DoAdditionalGeneratorsGeneration(string outputPath, IEnumerable<IGenerator> generators)
+        private static void DoAdditionalGeneratorsGeneration(string outputPath, IEnumerable<GeneratorMapping> additionalGeneratorMappings, AssemblyInformation assemblyInformation)
         {
-            foreach (IGenerator generator in generators)
+            var temp = new Assembly.Old.AssemblyInformation();
+
+            foreach (IGenerator generator in additionalGeneratorMappings.Select((mapping) => mapping.Factory(temp)))
             {
                 try
                 {

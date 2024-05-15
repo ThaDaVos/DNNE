@@ -7,7 +7,7 @@ namespace DNNE.Assembly.Entities;
 
 internal abstract class ExportedAttributedConstantValuedEntity<TEntity> : ExportedConstantValuedEntity<TEntity>, IExportedConstantValuedEntity, IExportedAttributedEntity where TEntity : struct
 {
-    protected ExportedAttributedConstantValuedEntity(MetadataReader metadataReader, TEntity entity) : base(metadataReader, entity)
+    protected ExportedAttributedConstantValuedEntity(MetadataReader metadataReader, TEntity entity, IExportedEntity? parent = null) : base(metadataReader, entity, parent)
     {
     }
 
@@ -15,6 +15,6 @@ internal abstract class ExportedAttributedConstantValuedEntity<TEntity> : Export
     protected abstract CustomAttributeHandleCollection GetCustomAttributeHandles();
     internal IEnumerable<IExportedAttribute> GetCustomAttributes() => GetCustomAttributeHandles()
             .Select(
-                (CustomAttributeHandle handle) => new ExportedAttribute(metadataReader, handle)
+                (CustomAttributeHandle handle) => new ExportedAttribute(metadataReader, handle, this)
             );
 }

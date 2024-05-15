@@ -8,7 +8,7 @@ internal abstract class ExportedConstantValuedEntity<TEntity> : ExportedValuedEn
 {
     private Constant? constant;
     public KnownType KnownType => GetKnownType() ?? KnownType.UNKNOWN;
-    protected ExportedConstantValuedEntity(MetadataReader metadataReader, TEntity entity) : base(metadataReader, entity)
+    protected ExportedConstantValuedEntity(MetadataReader metadataReader, TEntity entity, IExportedEntity? parent = null) : base(metadataReader, entity, parent)
     {
     }
     protected abstract ConstantHandle GetConstantHandle();

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection.Metadata;
+using DNNE.Assembly.Entities.Interfaces;
 
 namespace DNNE.Assembly.Entities;
 
@@ -7,7 +8,7 @@ internal class FixedArgumentOfExportedAttribute : ExportedValuedEntity<CustomAtt
 {
     private readonly string _name;
 
-    public FixedArgumentOfExportedAttribute(MetadataReader metadataReader, CustomAttributeTypedArgument<string> entity, string name) : base(metadataReader, entity)
+    public FixedArgumentOfExportedAttribute(MetadataReader metadataReader, CustomAttributeTypedArgument<string> entity, string name, IExportedEntity? parent = null) : base(metadataReader, entity, parent)
     {
         _name = name;
     }

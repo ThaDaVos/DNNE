@@ -14,7 +14,7 @@ internal class ExportedAttribute : ExportedEntity<CustomAttributeHandle>, IExpor
     private StringHandle? nameStringHandle;
     private StringHandle? namespaceStringHandle;
 
-    public ExportedAttribute(MetadataReader metadataReader, CustomAttributeHandle handle) : base(metadataReader, handle)
+    public ExportedAttribute(MetadataReader metadataReader, CustomAttributeHandle handle, IExportedEntity? parent = null) : base(metadataReader, handle, parent)
     {
     }
 
@@ -83,12 +83,12 @@ internal class ExportedAttribute : ExportedEntity<CustomAttributeHandle>, IExpor
             data.FixedArguments
                 .Select(
                     (CustomAttributeTypedArgument<string> item, int index)
-                        => new FixedArgumentOfExportedAttribute(metadataReader, item, constructorArgumentNames[index])
+                        => new FixedArgumentOfExportedAttribute(metadataReader, item, constructorArgumentNames[index], this)
                 ),
             data.NamedArguments
                 .Select(
                     (CustomAttributeNamedArgument<string> item)
-                        => new NamedArgumentOfExportedAttribute(metadataReader, item)
+                        => new NamedArgumentOfExportedAttribute(metadataReader, item, this)
                 )
         );
     }

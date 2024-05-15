@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Reflection;
 using System.Reflection.Metadata;
+using DNNE.Assembly.Entities.Interfaces;
 
 namespace DNNE.Assembly.Entities;
 
 internal class NamedArgumentOfExportedAttribute : ExportedValuedEntity<CustomAttributeNamedArgument<string>>
 {
-    public NamedArgumentOfExportedAttribute(MetadataReader metadataReader, CustomAttributeNamedArgument<string> entity) : base(metadataReader, entity)
+    public NamedArgumentOfExportedAttribute(MetadataReader metadataReader, CustomAttributeNamedArgument<string> entity, IExportedEntity? parent = null) : base(metadataReader, entity, parent)
     {
     }
 
